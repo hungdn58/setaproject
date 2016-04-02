@@ -63,7 +63,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Picasso.with(mContext)
                 .load(model.getImage())
                 .noFade()
-                .resize(pxToDp(300), pxToDp(200))
                 .placeholder(R.drawable.noimage)
                 .into(holder.image);
 
