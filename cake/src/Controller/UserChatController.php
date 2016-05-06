@@ -37,15 +37,17 @@ class UserChatController extends AppController
 
         $id1 = $this->request->query['id1'];
         $id2 = $this->request->query['id2'];
-        $limit = $this->request->query['limit'];
+        $limit = $this->request->query['offset'];
+        $offset = $this->request->query['limit'];
 
         $data = $this->UserChat->find('all')->where(['userID1' => $id1, 'userID2' => $id2])->orWhere(['userID1' => $id2, 'userID2' => $id1])->limit($limit);
 
         $output = [];
 
         if ($data) {
-            $output = ['result' => 1];
-            $output[] = ['opponent' => '/www/profile.jpg'];
+            $output = ['result' => 1,
+                        'opponent' => '/www/profile.jpg'];
+            // $output[] = ['opponent' => '/www/profile.jpg'];
             $array = array();
             foreach ($data as $chatItem) {
                 $sender = "";
@@ -54,11 +56,14 @@ class UserChatController extends AppController
                 }else{
                     $sender = 'other';
                 }
-                $array[] = ['from' => $sender];
-                $array[] = ['content'  =>  $chatItem->message];
-                $array[] = ['posttime'   =>  $chatItem->createDate];
+                $output[] = [
+                    'data' => [
+                        'from' => $sender,
+                        'content'  =>  $chatItem->message,
+                        'posttime'   =>  $chatItem->createDate
+                    ]
+                ];
             }
-            $output[] = ['data' => $array];
             $output[] = ['totalCount' => $data->count()];
         } else {
             $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
@@ -76,14 +81,22 @@ class UserChatController extends AppController
     public function add()
     {
         $userChat = $this->UserChat->newEntity();
+        $output = [];
+
         if ($this->request->is('post')) {
+            // $data = $this->request->data;
+            // var_dump($_POST);die();
             $userChat = $this->UserChat->patchEntity($userChat, $this->request->data);
             if ($this->UserChat->save($userChat)) {
                 $this->Flash->success(__('The user chat has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                $output = ['result' => 1];
             } else {
                 $this->Flash->error(__('The user chat could not be saved. Please, try again.'));
+                $output[] = ['result' => 0, 'reason' => 'post bi loi'];
             }
+            $this->viewBuilder()->layout('json');
+            $this->set('data', json_encode($output));
+            $this->render('/General/SerializeJson/');
         }
         $this->set(compact('userChat'));
         $this->set('_serialize', ['userChat']);
@@ -155,11 +168,11 @@ class UserChatController extends AppController
                     'user' => [
                         'profileImage'  =>  $user->profileImage,
                         'nickname'  =>  $user->nickname,
-                    ]
-                ];
+                    ],
+                    'content'  =>  $chatItem->message,
+                    'posttime'   =>  $chatItem->createDate
 
-                $array[] = ['content'  =>  $chatItem->message];
-                $array[] = ['posttime'   =>  $chatItem->createDate];
+                ];
             }
             $output[] = ['data' => $array];
             $output[] = ['totalCount' => $data->count()];

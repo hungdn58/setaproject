@@ -56,9 +56,9 @@ class UserChatTable extends Table
             ->notEmpty('message');
 
         $validator
-            ->integer('from')
-            ->requirePresence('from', 'create')
-            ->notEmpty('from');
+            ->integer('fromUser')
+            ->requirePresence('fromUser', 'create')
+            ->notEmpty('fromUser');
 
         $validator
             ->dateTime('createDate')

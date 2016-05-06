@@ -58,11 +58,12 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/notification/list.json', ['controller' => 'Notifications', 'action' => 'index']);
     $routes->connect('/user/profile.json', ['controller' => 'Users', 'action' => 'index']);
     $routes->connect('/user/profile/update/:id', ['controller' => 'Users', 'action' => 'edit'], ['pass' => array('id')]);
-    $routes->connect('/user/profile/delete', ['controller' => 'Users', 'action' => 'delete']);
+    $routes->connect('/user/profile/delete/:id', ['controller' => 'Users', 'action' => 'view'], ['pass' => array('id')]);
     $routes->connect('/user/profile.json/:id', ['controller' => 'Users', 'action' => 'getProfile'], ['pass' => array('id')]);
     $routes->connect('/chat/chat.json', ['controller' => 'UserChat', 'action' => 'view']);
+    $routes->connect('/chat/send', ['controller' => 'UserChat', 'action' => 'add']);
     $routes->connect('/timeline/reply', ['controller' => 'ItemReplies', 'action' => 'add']);
-    $routes->connect('/timeline/delete/:id', ['controller' => 'Items', 'action' => 'delete'], ['pass' => array('id')]);
+    $routes->connect('/timeline/delete/:id', ['controller' => 'Items', 'action' => 'view'], ['pass' => array('id')]);
     $routes->connect('/chat/list.json', ['controller' => 'UserChat', 'action' => 'chatList']);
     $routes->connect('/search/list.json', ['controller' => 'Users', 'action' => 'search']);
 

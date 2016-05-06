@@ -48,12 +48,13 @@ class ItemRepliesController extends AppController
      */
     public function add()
     {
-        $this->viewBuilder()->layout('json');
-        $item = $this->ItemReplies->newEntity();
+        $itemReply = $this->ItemReplies->newEntity();
         $output = [];
         if ($this->request->is('post')) {
-            $item = $this->ItemReplies->patchEntity($item, $this->request->data);
-            if ($this->ItemReplies->save($item)) {
+            $data = $this->request->data;
+            var_dump($_POST);die();
+            $itemReply = $this->ItemReplies->patchEntity($itemReply, $this->request->data);
+            if ($this->ItemReplies->save($itemReply)) {
                 $this->Flash->success(__('The item has been saved.'));
                 $output = ['result' => 1];
                 // return $this->redirect(['action' => 'index']);
@@ -61,11 +62,12 @@ class ItemRepliesController extends AppController
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
                 $output[] = ['result' => 0, 'reason' => 'post bi loi'];
             }
+            $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
             $this->render('/General/SerializeJson/');
         }
-        $this->set(compact('item'));
-        $this->set('_serialize', ['item']);
+        $this->set(compact('itemReply'));
+        $this->set('_serialize', ['itemReply']);
     }
 
     /**

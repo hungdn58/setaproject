@@ -19,6 +19,7 @@ class UsersController extends AppController
      */
     public function index()
     {
+
         //$this->Users->findAll();
         $this->viewBuilder()->layout('json');
         //$users = $this->paginate($this->Users);
@@ -99,9 +100,7 @@ class UsersController extends AppController
      */
     public function view($id = null)
     {
-        $user = $this->Users->get($id, [
-            'contain' => ['Bookmarks']
-        ]);
+        $user = $this->Users->find()->where(['userId' => $id])->first();
 
         $this->set('user', $user);
         $this->set('_serialize', ['user']);
@@ -137,13 +136,16 @@ class UsersController extends AppController
      */
     public function edit($userId = null)
     {
-        $user = $this->Users->find()->where(['userId' => $userId]);
-        $this->viewBuilder()->layout('json');
+        $user = $this->Users->get($userId);
+       
         $output = [];
 
         if ($this->request->is(['patch', 'post', 'put'])) {
+            // var_dump($_POST);die();
+            $data = $this->request->data;
+            
             $user = $this->Users->patchEntity($user, $this->request->data);
-            if ($this->Items->save($user)) {
+            if ($this->Users->save($user)) {
                 $this->Flash->success(__('The item has been saved.'));
                 $output = ['result' => 1];
                 // return $this->redirect(['action' => 'index']);
@@ -151,6 +153,7 @@ class UsersController extends AppController
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
                 $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
             }
+             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
             $this->render('/General/SerializeJson/');
         }
@@ -165,13 +168,13 @@ class UsersController extends AppController
      * @return \Cake\Network\Response|null Redirects to index.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
-    public function delete()
+    public function delete($id = null)
     {
         $this->viewBuilder()->layout('json');
         $this->request->allowMethod(['post', 'delete']);
-        $id = $this->request->query['id'];
-        $user = $this->Users->find()->where(['userId' => $id]);
+        $user = $this->Users->get($id);
         $output = [];
+        // var_dump($_POST);die();
         if ($this->Users->delete($user)) {
             $this->Flash->success(__('The user has been deleted.'));
             $output = ['result' => 1];

@@ -39,7 +39,8 @@ class ItemsController extends AppController
                         'nickname'  =>  $user->nickname,
                         'address'   =>  $user->address,
                         'replyTo'   =>  ['userID' => $user->userId, 'userName' => $user->nickname],
-                        'content'   =>  $post->contents
+                        'content'   =>  $post->contents,
+                        'posttime'  =>  $post->createDate
                     ]
                 ];
             }
@@ -77,10 +78,12 @@ class ItemsController extends AppController
      */
     public function add()
     {
-        $this->viewBuilder()->layout('json');
+        
         $item = $this->Items->newEntity();
         $output = [];
         if ($this->request->is('post')) {
+            // $data = $this->request->data;
+            // var_dump($data['userID']);die();
             $item = $this->Items->patchEntity($item, $this->request->data);
             if ($this->Items->save($item)) {
                 $this->Flash->success(__('The item has been saved.'));
@@ -90,6 +93,7 @@ class ItemsController extends AppController
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
                 $output[] = ['result' => 0, 'reason' => 'post bi loi'];
             }
+            $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
             $this->render('/General/SerializeJson/');
         }
@@ -133,8 +137,7 @@ class ItemsController extends AppController
     {
         $this->viewBuilder()->layout('json');
         $this->request->allowMethod(['post', 'delete']);
-        $output = [];
-        $item = $this->Items->find()->where(['itemID' => $id]);
+        $item = $this->Items->get($id);
         if ($this->Items->delete($item)) {
             $this->Flash->success(__('The item has been deleted.'));
             $output = ['result' => 1];
