@@ -15,10 +15,8 @@
     <fieldset>
         <legend><?= __('Edit Item') ?></legend>
         <?php
-            echo $this->Form->input('contents');
+            echo $this->Form->input('reportBy');
             echo $this->Form->input('createDate');
-            echo $this->Form->input('updateDate', ['empty' => true]);
-            echo $this->Form->input('delFlg');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

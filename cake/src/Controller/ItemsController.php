@@ -113,14 +113,19 @@ class ItemsController extends AppController
         $item = $this->Items->get($id, [
             'contain' => []
         ]);
+        $output = [];
         if ($this->request->is(['patch', 'post', 'put'])) {
             $item = $this->Items->patchEntity($item, $this->request->data);
             if ($this->Items->save($item)) {
                 $this->Flash->success(__('The item has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                $output = ['result' => 1];
             } else {
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
+                $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
             }
+            $this->viewBuilder()->layout('json');
+            $this->set('data', json_encode($output));
+            $this->render('/General/SerializeJson/');
         }
         $this->set(compact('item'));
         $this->set('_serialize', ['item']);
