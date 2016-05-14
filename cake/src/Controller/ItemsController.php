@@ -26,28 +26,28 @@ class ItemsController extends AppController
         $output = [];
 
         if($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $array = array();
             $this->loadModel('Users');
             foreach ($data as $post) {
 
                 $user = $this->Users->find()->where(['userId' => $post->userID])->first();
 
-                $array[] = [
-                    'post' => [
+                $array[] =
+                    [
                         'profileImage'  =>  $user->profileImage,
                         'nickname'  =>  $user->nickname,
                         'address'   =>  $user->address,
                         'replyTo'   =>  ['userID' => $user->userId, 'userName' => $user->nickname],
                         'content'   =>  $post->contents,
                         'posttime'  =>  $post->createDate
-                    ]
-                ];
+                    ];
             }
-            $output[] = ['data' => $array];
-            $output[] = ['totalCount' => sizeof($data)];
+            $output['data'] = $array;
+            $output['totalCount'] = sizeof($data);
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
                 
         $this->set('data', json_encode($output));
@@ -82,16 +82,17 @@ class ItemsController extends AppController
         $item = $this->Items->newEntity();
         $output = [];
         if ($this->request->is('post')) {
-            // $data = $this->request->data;
-            // var_dump($data['userID']);die();
+            $data = $this->request->data;
+            // var_dump($data['contents']);die();
             $item = $this->Items->patchEntity($item, $this->request->data);
             if ($this->Items->save($item)) {
                 $this->Flash->success(__('The item has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
                 // return $this->redirect(['action' => 'index']);
             } else {
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bi loi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
@@ -118,10 +119,11 @@ class ItemsController extends AppController
             $item = $this->Items->patchEntity($item, $this->request->data);
             if ($this->Items->save($item)) {
                 $this->Flash->success(__('The item has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
             } else {
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
@@ -145,10 +147,10 @@ class ItemsController extends AppController
         $item = $this->Items->get($id);
         if ($this->Items->delete($item)) {
             $this->Flash->success(__('The item has been deleted.'));
-            $output = ['result' => 1];
-        } else {
+            $output['result'] = 1;
             $this->Flash->error(__('The item could not be deleted. Please, try again.'));
-            $output[] = ['result' => 0, 'reason' => 'post bi loi'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
         $this->set('data', json_encode($output));
         $this->render('/General/SerializeJson/');

@@ -37,16 +37,16 @@ class UserChatController extends AppController
 
         $id1 = $this->request->query['id1'];
         $id2 = $this->request->query['id2'];
-        $limit = $this->request->query['offset'];
-        $offset = $this->request->query['limit'];
+        $limit = $this->request->query['limit'];
+        $offset = $this->request->query['offset'];
 
         $data = $this->UserChat->find('all')->where(['userID1' => $id1, 'userID2' => $id2])->orWhere(['userID1' => $id2, 'userID2' => $id1])->limit($limit);
 
         $output = [];
 
         if ($data) {
-            $output = ['result' => 1,
-                        'opponent' => '/www/profile.jpg'];
+            $output['result'] = 1;
+            $output['opponent'] = '/www/profile.jpg';
             // $output[] = ['opponent' => '/www/profile.jpg'];
             $array = array();
             foreach ($data as $chatItem) {
@@ -56,17 +56,17 @@ class UserChatController extends AppController
                 }else{
                     $sender = 'other';
                 }
-                $output[] = [
-                    'data' => [
-                        'from' => $sender,
-                        'content'  =>  $chatItem->message,
-                        'posttime'   =>  $chatItem->createDate
-                    ]
+                $array[] = [
+                    'from' => $sender,
+                    'content'  =>  $chatItem->message,
+                    'posttime'   =>  $chatItem->createDate
                 ];
             }
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
         
         $this->set('data', json_encode($output));
@@ -89,10 +89,11 @@ class UserChatController extends AppController
             $userChat = $this->UserChat->patchEntity($userChat, $this->request->data);
             if ($this->UserChat->save($userChat)) {
                 $this->Flash->success(__('The user chat has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
             } else {
                 $this->Flash->error(__('The user chat could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bi loi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
@@ -160,7 +161,7 @@ class UserChatController extends AppController
         $output = [];
 
         if ($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $array = array();
             foreach ($data as $chatItem) {
                 $user = $this->Users->find()->where(['userId' => $chatItem->userID2])->first();
@@ -174,10 +175,11 @@ class UserChatController extends AppController
 
                 ];
             }
-            $output[] = ['data' => $array];
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
         
         $this->set('data', json_encode($output));

@@ -43,25 +43,11 @@ class ItemsTable extends Table
 
         $validator
             ->integer('userID')
-            ->allowEmpty('userID', 'create');
+            ->notEmpty('userID', 'create');
 
         $validator
             ->requirePresence('contents', 'create')
             ->notEmpty('contents');
-
-        $validator
-            ->dateTime('createDate')
-            ->requirePresence('createDate', 'create')
-            ->notEmpty('createDate');
-
-        $validator
-            ->dateTime('updateDate')
-            ->allowEmpty('updateDate');
-
-        $validator
-            ->integer('delFlg')
-            ->requirePresence('delFlg', 'create')
-            ->notEmpty('delFlg');
 
         return $validator;
     }

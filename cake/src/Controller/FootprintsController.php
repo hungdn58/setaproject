@@ -26,7 +26,7 @@ class FootprintsController extends AppController
         
         $output = [];
         if($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $this->loadModel('Users');
             $array = array();
             foreach ($data as $item) {
@@ -34,17 +34,18 @@ class FootprintsController extends AppController
                 $user = $this->Users->find()->where(['userId' => $item->visitor])->first();
 
                 $array[] = [
-                    'profileImage'  =>  $user->profileImage,
-                    'nick_name'  =>  $user->nickname,
-                    'address'   =>  $user->address,
+                    'profileImage' => $user->profileImage,
+                    'nick_name' => $user->nickname,
+                    'address' => $user->address,
                     'posttime' => $item->createDate
                 ];
                 
             }
-            $output[] = ['data' => $array];
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
                 
         $this->set('data', json_encode($output));
@@ -106,10 +107,11 @@ class FootprintsController extends AppController
             $footprint = $this->Footprints->patchEntity($footprint, $this->request->data);
             if ($this->Footprints->save($footprint)) {
                 $this->Flash->success(__('The footprint has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
             } else {
                 $this->Flash->error(__('The footprint could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));

@@ -56,11 +56,12 @@ class ItemRepliesController extends AppController
             $itemReply = $this->ItemReplies->patchEntity($itemReply, $this->request->data);
             if ($this->ItemReplies->save($itemReply)) {
                 $this->Flash->success(__('The item has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
                 // return $this->redirect(['action' => 'index']);
             } else {
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bi loi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
             $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));

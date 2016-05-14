@@ -25,21 +25,20 @@ class NotificationsController extends AppController
         $output = [];
 
         if ($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $array = array();
             foreach ($data as $notification) {
                 $array[] = [
-                    'post' => [
-                        'title'  =>  $notification->title,
-                        'content'  =>  $notification->content,
-                        'posttime'   =>  $notification->createDate,
-                    ]
+                    'title'  =>  $notification->title,
+                    'content'  =>  $notification->content,
+                    'posttime'   =>  $notification->createDate
                 ];
             }
-            $output[] = ['data' => $array];
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
         
         $this->set('data', json_encode($output));

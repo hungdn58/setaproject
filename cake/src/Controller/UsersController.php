@@ -34,7 +34,7 @@ class UsersController extends AppController
         
         $output = [];
         if($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             foreach ($data as $item) {
                 $output[] = [
                     'user' => [
@@ -49,7 +49,8 @@ class UsersController extends AppController
             }
             $output[] = ['totalCount' => $data->count()];
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
                 
         $this->set('data', json_encode($output));
@@ -63,28 +64,27 @@ class UsersController extends AppController
         $year_from = $this->request->query['year_from'];
         $year_to = $this->request->query['year_to'];
 
-        $data = $this->Users->find()->where(['dateDiff(NOW(),Users.birthday) >' => $year_from])
-                                    ->andWhere(['dateDiff(NOW(),Users.birthday) <' => $year_to])
-                                    ->andWhere(['Users.gender' => $gender]);
+        // $data = $this->Users->find()->where(['dateDiff(NOW(),Users.birthday) >' => $year_from])
+        //                             ->andWhere(['dateDiff(NOW(),Users.birthday) <' => $year_to])
+        $data = $this->Users->find()->andWhere(['Users.gender' => $gender]);
 
         $output = [];
         if($data) {
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $array = array();
 
             foreach ($data as $user) {
 
                 $array[] = [
-                    'user' => [
-                        'profileImage'  =>  $user->profileImage,
-                        'userID'  =>  $user->userId,
-                    ]
+                    'profileImage'  =>  $user->profileImage,
+                    'userID'  =>  $user->userId,
                 ];
             }
-            $output[] = ['data' => $array];
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
-            $output = ['result' => 0, 'reason' => 'Không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
                 
         $this->set('data', json_encode($output));
@@ -147,11 +147,12 @@ class UsersController extends AppController
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The item has been saved.'));
-                $output = ['result' => 1];
+                $output['result'] = 1;
                 // return $this->redirect(['action' => 'index']);
             } else {
                 $this->Flash->error(__('The item could not be saved. Please, try again.'));
-                $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
              $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
@@ -177,10 +178,11 @@ class UsersController extends AppController
         // var_dump($_POST);die();
         if ($this->Users->delete($user)) {
             $this->Flash->success(__('The user has been deleted.'));
-            $output = ['result' => 1];
+            $output['result'] = 1;
         } else {
             $this->Flash->error(__('The user could not be deleted. Please, try again.'));
-            $output[] = ['result' => 0, 'reason' => 'post bị lỗi'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
         $this->set('data', json_encode($output));
         $this->render('/General/SerializeJson/');
@@ -195,20 +197,19 @@ class UsersController extends AppController
 
         if ($user) {
             # code...
-            $output = ['result' => 1];
+            $output['result'] = 1;
             $array = array();
-            $output[] = [
-                'data' => [
-                    'profileImage' => $user->profileImage,
-                    'nickname' => $user->nickname,
-                    'gender' => $user->gender,
-                    'birthday' => $user->birthday,
-                    'address' => $user->address,
-                    'description' => $user->description,
-                ]
+            $output['data'] = [
+                'profileImage' => $user->profileImage,
+                'nickname' => $user->nickname,
+                'gender' => $user->gender,
+                'birthday' => $user->birthday,
+                'address' => $user->address,
+                'description' => $user->description,
             ];
         }else{
-            $output = ['result' => 0, 'reason' => 'không lấy được dữ liệu'];
+            $output['result'] = 0;
+            $output['reason'] = 'không lấy được dữ liệu';
         }
 
         $this->set('data', json_encode($output));
