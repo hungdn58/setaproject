@@ -33,7 +33,6 @@
             android:layout_alignParentRight="true"
             android:id="@+id/post"
             android:textStyle="bold"
-            android:enabled="false"
             android:textColor="@color/background"
             android:layout_centerVertical="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
@@ -49,6 +48,7 @@
             android:layout_height="match_parent"
             android:lines="50"
             android:gravity="top"
+            android:id="@+id/reply_item"
             android:background="@android:color/transparent"
             android:windowSoftInputMode="stateHidden|adjustPan"
             android:layout_margin="5dp"/>

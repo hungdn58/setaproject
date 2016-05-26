@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
+import com.example.hoang.datingproject.Adapter.DatingAdapter;
 import com.example.hoang.datingproject.Adapter.FriendsAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
 import com.example.hoang.datingproject.Model.PersonModel;
@@ -27,6 +29,7 @@ import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
+import com.example.hoang.datingproject.Utilities.RegisterUserClass;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,15 +42,17 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by hoang on 4/4/2016.
  */
-public class FriendsFragment extends Fragment {
+public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView recyclerView;
     private FriendsAdapter adapter;
     private ArrayList<PersonModel> arr;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Nullable
     @Override
@@ -58,15 +63,17 @@ public class FriendsFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        swipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe2refresh);
+
+        swipeRefreshLayout.setOnRefreshListener(this);
         recyclerView = (RecyclerView) getActivity().findViewById(R.id.recyclerView);
         arr = new ArrayList<PersonModel>();
-        arr.add(null);
 
-        adapter = new FriendsAdapter(getActivity(), arr, recyclerView);
-        adapter.notifyItemInserted(arr.size() - 1);
-//        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),3);
         recyclerView.setLayoutManager(gridLayoutManager);
+        arr.add(null);
+        adapter = new FriendsAdapter(getActivity(), arr, recyclerView);
+        adapter.notifyItemInserted(arr.size() - 1);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
 
@@ -108,22 +115,21 @@ public class FriendsFragment extends Fragment {
         });
     }
 
+    @Override
+    public void onRefresh() {
+        new GetData().execute(Const.USER_LIST_URL);
+    }
+
     public void showDialog(){
         SearchAccountDialogFragment myDialog = new SearchAccountDialogFragment();
         myDialog.show(getFragmentManager(), "My Dialog");
     }
 
     private class GetData extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog = new ProgressDialog(getActivity(),
-                    R.style.AppTheme_Dark_Dialog);
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage("Loading...");
-            progressDialog.show();
         }
         @Override
         protected String doInBackground(String... params) {
@@ -162,8 +168,6 @@ public class FriendsFragment extends Fragment {
         @Override
         protected void onPostExecute(String doubles) {
 
-//            Log.d(Const.LOG_TAG, encodedImage);
-
             try{
 
                 JSONObject jsonObject = new JSONObject(doubles);
@@ -171,37 +175,79 @@ public class FriendsFragment extends Fragment {
                 String result = jsonObject.getString("result");
                 if (result.equalsIgnoreCase("1")) {
                     JSONArray data = jsonObject.getJSONArray("data");
-                    arr.remove(arr.size() - 1);
-                    adapter.notifyItemRemoved(arr.size());
+                    ArrayList<PersonModel> arrayList = new ArrayList<PersonModel>();
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject item = data.getJSONObject(i);
+
                         String profileImage = item.getString(Const.PROFILE_IMAGE);
                         String uid = item.getString(Const.PROFILE_UID);
+                        String userID = item.getString(Const.USERID);
                         String nickname = item.getString(Const.NICK_NAME);
 
-                        byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
-                        if (decodedString != null) {
-                            Log.e(Const.LOG_TAG, "k null");
-                        }
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        if (decodedByte == null) {
-                            Log.e(Const.LOG_TAG, "null");
-                        }
                         Log.d(Const.LOG_TAG, uid + " - " + nickname);
                         Log.d(Const.LOG_TAG, PersonalInfoActivity.getDefaults("email", getActivity()) + "-" +
-                        PersonalInfoActivity.getDefaults("password", getActivity()) + "-" +
-                        PersonalInfoActivity.getDefaults("id", getActivity()));
+                                PersonalInfoActivity.getDefaults("password", getActivity()) + "-" +
+                                PersonalInfoActivity.getDefaults("id", getActivity()));
 
-                        PersonModel model = new PersonModel(decodedByte, nickname, uid);
+                        PersonModel model = new PersonModel(profileImage, nickname, userID);
 
-                        arr.add(model);
-                        adapter.notifyDataSetChanged();
+                        arrayList.add(model);
                     }
-                    progressDialog.dismiss();
+                    arr.clear();
+                    arr.addAll(arrayList);
+                    adapter.notifyDataSetChanged();
+//                    progressDialog.dismiss();
+                    swipeRefreshLayout.setRefreshing(false);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     }
+
+    public void sendChat(final String userID1, String userID2, String contents, String from){
+        class SendChat extends AsyncTask<String, Void, String> {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(s);
+                    String result = jsonObject.getString("result");
+                    if(result.equalsIgnoreCase("1")){
+                        Log.d(Const.LOG_TAG, "send chat success");
+                    }else{
+                        Log.d(Const.LOG_TAG, "send chat failed");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                HashMap<String,String> data = new HashMap<>();
+                data.put(Const.USERID1,params[0]);
+                data.put(Const.USERID2,params[1]);
+                data.put(Const.MESSAGE,params[2]);
+                data.put(Const.FROM_USER,params[3]);
+
+                RegisterUserClass ruc = new RegisterUserClass();
+
+                String result = ruc.sendPostRequest(Const.CHAT_SEND_URL,data);
+
+                Log.d(Const.LOG_TAG, result + "");
+                return result;
+            }
+        }
+        SendChat send = new SendChat();
+        send.execute(userID1, userID2, contents, from);
+    }
+
 }

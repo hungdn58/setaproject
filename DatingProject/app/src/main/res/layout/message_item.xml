@@ -3,6 +3,7 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="3dp"
+    android:id="@+id/message_container"
     android:background="@color/white">
     <ImageView
         android:layout_width="70dp"
@@ -19,6 +20,7 @@
             android:layout_height="wrap_content"
             android:text="28/11/1995"
             android:layout_alignParentRight="true"
+            android:id="@+id/message_posttime"
             android:layout_marginRight="15dp"/>
         <TextView
             android:layout_width="wrap_content"

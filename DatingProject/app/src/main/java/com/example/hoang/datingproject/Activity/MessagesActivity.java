@@ -1,10 +1,13 @@
 package com.example.hoang.datingproject.Activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -12,6 +15,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,14 +35,31 @@ import com.example.hoang.datingproject.Fragment.FeedsFragment;
 import com.example.hoang.datingproject.Model.FeedModel;
 import com.example.hoang.datingproject.Model.ImageItem;
 import com.example.hoang.datingproject.Model.InboxModel;
+import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
+import com.example.hoang.datingproject.Utilities.RegisterUserClass;
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 
 public class MessagesActivity extends AppCompatActivity implements View.OnClickListener, EmotionFragment.ListSelectionListener{
 
@@ -56,6 +78,15 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
     private FragmentTransaction fragmentTransaction;
     private Bitmap img = null;
     private ArrayList<Integer> imgId = new ArrayList<Integer>();
+    private PersonModel friend = new PersonModel();
+    private MediaPlayer media;
+
+    private Socket mSocket;
+    {
+        try {
+            mSocket = IO.socket(Const.SOCKET_URL);
+        } catch (URISyntaxException e) {}
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +96,17 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void getControls() {
+
+        Intent intent = getIntent();
+
+        friend = (PersonModel) intent.getSerializableExtra("model");
+
+        String senderId = PersonalInfoActivity.getDefaults("id", MessagesActivity.this);
+
+        mSocket.connect();
+        mSocket.emit("client-gui-username", senderId);
+        mSocket.on("ketquaDangKyUn", onNewMessage_DangKyUserName);
+
         message_edittext = (EditText) findViewById(R.id.message_edittext);
         message_camera = (Button) findViewById(R.id.message_camera);
         back_button = (TextView) findViewById(R.id.back_button);
@@ -92,30 +134,35 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         arr.clear();
-        arr.addAll(getData());
+//        arr.addAll(getData());
         adapter = new InboxAdapter(MessagesActivity.this, arr);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(MessagesActivity.this, LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
-        scrollToTop();
+
+        mSocket.emit("client-chat-client", friend.getId());
+        mSocket.on("updatechat", onNewMessage_UpdateChat);
+//        scrollToTop();
 //        recyclerView.setHasFixedSize(true);
+        new GetData().execute(Const.CHAT_LOG_URL + "&id1=" + PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + "&id2=" + friend.getId());
+
     }
 
-    private ArrayList<InboxModel> getData() {
-        ArrayList<InboxModel> arrayList = new ArrayList<InboxModel>();
-        InboxModel model = new InboxModel("16:21", "こんばんは(^-^)/", 1);
-        InboxModel model1 = new InboxModel("21:21", "ありがとう", 2);
-        Bitmap icon = BitmapFactory.decodeResource(MessagesActivity.this.getResources(),
-                R.drawable.avatar);
-        InboxModel model2 = new InboxModel("01:05", icon);
-        arrayList.add(model);
-        arrayList.add(model1);
-        arrayList.add(model2);
-
-        return arrayList;
-    }
+//    private ArrayList<InboxModel> getData() {
+//        ArrayList<InboxModel> arrayList = new ArrayList<InboxModel>();
+//        InboxModel model = new InboxModel("16:21", "こんばんは(^-^)/", 1);
+//        InboxModel model1 = new InboxModel("21:21", "ありがとう", 2);
+//        Bitmap icon = BitmapFactory.decodeResource(MessagesActivity.this.getResources(),
+//                R.drawable.avatar);
+//        InboxModel model2 = new InboxModel("01:05", icon);
+//        arrayList.add(model);
+//        arrayList.add(model1);
+//        arrayList.add(model2);
+//
+//        return arrayList;
+//    }
 
     @Override
     public void onClick(View v) {
@@ -124,14 +171,10 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                 if (message_edittext.getText().toString().equals("")){
                     Toast.makeText(MessagesActivity.this, "empty messages", Toast.LENGTH_SHORT).show();
                 }else {
-                    SimpleDateFormat sdf = new SimpleDateFormat("HH:MM");
-                    Date c = Calendar.getInstance().getTime();
-                    String newFormat = sdf.format(c);
-                    InboxModel model = new InboxModel(newFormat, message_edittext.getText().toString(), 10);
+                    mSocket.emit("client-gui-chat", message_edittext.getText().toString());
+                    sendChat(PersonalInfoActivity.getDefaults("id", MessagesActivity.this), friend.getId(), message_edittext.getText().toString(),PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
+                    Log.d(Const.LOG_TAG, PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + friend.getId() + message_edittext.getText().toString() + PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
                     message_edittext.setText("");
-                    arr.add(model);
-                    adapter.notifyDataSetChanged();
-                    scrollToTop();
                 }
                 break;
             case R.id.back_button:
@@ -225,10 +268,10 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-                model = new InboxModel(newFormat,imageBitmap);
-                arr.add(model);
+//                model = new InboxModel(newFormat,imageBitmap);
+//                arr.add(model);
                 adapter.notifyDataSetChanged();
-                scrollToTop();
+//                scrollToTop();
             }
         } else if (requestCode == Const.PICTURE_CHOOSE && resultCode == RESULT_OK) {
             if (data != null) {
@@ -246,10 +289,10 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                 options.inJustDecodeBounds = false;
                 img = BitmapFactory.decodeFile(fileSrc, options);
 
-                model = new InboxModel(newFormat,img);
-                arr.add(model);
+//                model = new InboxModel(newFormat,img);
+//                arr.add(model);
                 adapter.notifyDataSetChanged();
-                scrollToTop();
+//                scrollToTop();
             }
         }
     }
@@ -263,4 +306,200 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
         });
     }
 
+    private class GetData extends AsyncTask<String, Void, String> {
+        ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(MessagesActivity.this,
+                    R.style.AppTheme_Dark_Dialog);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Loading...");
+            progressDialog.show();
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            HttpURLConnection connection = null;
+            StringBuilder jsonResults = new StringBuilder();
+            String result = "";
+
+            try {
+                StringBuilder sb = new StringBuilder(params[0]);
+
+                URL url = new URL(sb.toString());
+                Log.d(Const.LOG_TAG, url.toString());
+                connection = (HttpURLConnection) url.openConnection();
+                InputStreamReader in = new InputStreamReader(connection.getInputStream());
+
+                int read;
+                char[] buff = new char[1024];
+                while ((read = in.read(buff)) != -1) {
+                    jsonResults.append(buff, 0, read);
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            result = jsonResults.toString();
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String doubles) {
+
+//            Log.d(Const.LOG_TAG, encodedImage);
+
+            try{
+
+                JSONObject jsonObject = new JSONObject(doubles);
+                Log.d(Const.LOG_TAG, jsonObject.toString());
+                String result = jsonObject.getString("result");
+                if (result.equalsIgnoreCase("1")) {
+                    JSONArray data = jsonObject.getJSONArray("data");
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject item = data.getJSONObject(i);
+                        String profileImage = item.getString(Const.PROFILE_IMAGE);
+                        String content = item.getString("content");
+                        String posttime = item.getString("posttime");
+                        String fromID = item.getString("fromID");
+
+                        InboxModel model = new InboxModel(posttime, content, fromID, profileImage);
+
+                        arr.add(model);
+                        adapter.notifyDataSetChanged();
+                    }
+                    progressDialog.dismiss();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Emitter.Listener onNewMessage_DangKyUserName = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+//                    JSONObject dataid = (JSONObject) args[1];
+                    String noidung;
+                    String id;
+                    try {
+                        noidung = data.getString("noidung");
+                        if (noidung == "true") {
+                            Log.d(Const.LOG_TAG, "register socket success");
+                        } else {
+                            Log.d(Const.LOG_TAG, "register socket failed");
+                        }
+                    } catch (JSONException e) {
+                        return;
+                    }
+                    // add the message to view
+                }
+            });
+        }
+    };
+
+    private Emitter.Listener onNewMessage_UpdateChat = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    String noidung;
+                    String userID;
+                    String profileImage;
+                    media = MediaPlayer.create(MessagesActivity.this, R.raw.ting);
+                    media.start();
+
+                    try {
+                        userID = data.getString("username");
+                        noidung = data.getString("message");
+
+                        if (userID.equalsIgnoreCase(PersonalInfoActivity.getDefaults("id", MessagesActivity.this))) {
+                            profileImage = PersonalInfoActivity.getDefaults("profileImage", MessagesActivity.this);
+
+                        }else {
+                            profileImage = friend.getImage();
+                        }
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:MM");
+                        Date c = Calendar.getInstance().getTime();
+                        String newFormat = sdf.format(c);
+
+                        InboxModel model = new InboxModel(newFormat, noidung, userID, profileImage );
+
+                        arr.add(model);
+                        adapter.notifyDataSetChanged();
+                        scrollToTop();
+                    } catch (JSONException e) {
+                        return;
+                    }
+                    // add the message to view
+                }
+            });
+        }
+    };
+
+    public void sendChat(final String userID1, String userID2, String contents, String from){
+        class SendChat extends AsyncTask<String, Void, String> {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(s);
+                    String result = jsonObject.getString("result");
+                    if(result.equalsIgnoreCase("1")){
+                        Log.d(Const.LOG_TAG, "send chat success");
+                    }else{
+                        Log.d(Const.LOG_TAG, "send chat failed");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                HashMap<String,String> data = new HashMap<>();
+                data.put(Const.USERID1,params[0]);
+                data.put(Const.USERID2,params[1]);
+                data.put(Const.MESSAGE,params[2]);
+                data.put(Const.FROM_USER,params[3]);
+
+                RegisterUserClass ruc = new RegisterUserClass();
+
+                String result = ruc.sendPostRequest(Const.CHAT_SEND_URL,data);
+
+                Log.d(Const.LOG_TAG, result + "");
+                return result;
+            }
+        }
+        SendChat send = new SendChat();
+        send.execute(userID1, userID2, contents, from);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSocket.emit("signout", PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
+        mSocket.disconnect();
+    }
 }

@@ -10,18 +10,40 @@ public class InboxModel {
     private String content;
     private int id;
     private Bitmap image;
+    private String sender;
+    private String profileImage;
+
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
 
     public InboxModel(){}
 
-    public InboxModel(String mtime, String mcontent, int mid) {
+    public InboxModel(String mtime, String mcontent, String sender, String profileImage) {
         this.time = mtime;
         this.content = mcontent;
-        this.id = mid;
+        this.sender = sender;
+        this.profileImage = profileImage;
     }
 
-    public InboxModel(String mtime,Bitmap bitmap) {
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public InboxModel(String mtime,Bitmap bitmap, String sender, String profileImage) {
         this.time = mtime;
         this.image = bitmap;
+        this.sender = sender;
+        this.profileImage = profileImage;
+
     }
 
     public String getTime() {

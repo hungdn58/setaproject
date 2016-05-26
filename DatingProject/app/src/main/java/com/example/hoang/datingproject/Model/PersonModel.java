@@ -2,26 +2,30 @@ package com.example.hoang.datingproject.Model;
 
 import android.graphics.Bitmap;
 
+import java.io.Serializable;
+
 /**
  * Created by hoang on 4/4/2016.
  */
-public class PersonModel {
-    private Bitmap image;
-    private int id;
+public class PersonModel implements Serializable{
+    private String image;
+    private String id;
     private String nickname;
     private String uid;
 
-    public PersonModel(Bitmap image, String nickname, String uid) {
+    public PersonModel() {}
+
+    public PersonModel(String image, String nickname, String id) {
         this.image = image;
         this.nickname = nickname;
-        this.uid = uid;
+        this.id = id;
     }
 
-    public Bitmap getImage() {
+    public String getImage() {
         return image;
     }
 
-    public void setImage(Bitmap image) {
+    public void setImage(String image) {
         this.image = image;
     }
 
@@ -41,11 +45,11 @@ public class PersonModel {
         this.uid = uid;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 }

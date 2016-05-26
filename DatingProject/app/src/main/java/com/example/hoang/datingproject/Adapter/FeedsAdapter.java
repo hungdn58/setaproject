@@ -1,11 +1,20 @@
 package com.example.hoang.datingproject.Adapter;
 
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,16 +28,23 @@ import android.widget.Toast;
 
 import com.example.hoang.datingproject.Activity.ImageViewActivity;
 import com.example.hoang.datingproject.Activity.MessagesActivity;
+import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
 import com.example.hoang.datingproject.Fragment.FeedsFragment;
+import com.example.hoang.datingproject.Fragment.WriteNoteDialog;
 import com.example.hoang.datingproject.Model.FeedModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
+import com.example.hoang.datingproject.Utilities.RegisterUserClass;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by hoang on 4/4/2016.
@@ -41,33 +57,36 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private OnLoadMoreListener mOnLoadMoreListener;
 
     private boolean isLoading;
-    private int visibleThreshold = 5;
+    private int visibleThreshold = 1;
     private int lastVisibleItem, totalItemCount;
 
     public FeedsAdapter(Context mcontext, ArrayList<FeedModel> arr, RecyclerView recyclerView) {
         this.mContext = mcontext;
         this.arr = arr;
-        notifyDataSetChanged();
-        final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
 
-                if (linearLayoutManager != null) {
+            final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView
+                    .getLayoutManager();
+
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+
                     totalItemCount = linearLayoutManager.getItemCount();
                     lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-                }
 
-                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                    if (mOnLoadMoreListener != null) {
-                        mOnLoadMoreListener.onLoadMore();
+                    if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold) && totalItemCount >=5) {
+                        if (mOnLoadMoreListener != null) {
+                            Log.d(Const.LOG_TAG, totalItemCount + "size" + "-" + lastVisibleItem + "position" + visibleThreshold);
+                            mOnLoadMoreListener.onLoadMore();
+                        }
+                        isLoading = true;
                     }
-                    isLoading = true;
                 }
-            }
-        });
+            });
+        }
     }
 
     public void setOnLoadMoreListener(OnLoadMoreListener mOnLoadMoreListener) {
@@ -99,7 +118,9 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             feedModel = arr.get(position);
             FeedHolder feedHolder = (FeedHolder) holder;
             Typeface font = FontManager.getTypeface(mContext, FontManager.FONTAWESOME);
-            feedHolder.feedIcon.setImageResource(feedModel.getFeedIcon());
+            byte[] decodedString = Base64.decode(feedModel.getFeedIcon(), Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            feedHolder.feedIcon.setImageBitmap(decodedByte);
             feedHolder.feedTitle.setText(feedModel.getFeedTitle());
             if (feedModel.getFeedDescription() != null) {
                 feedHolder.feedDescription.setText(feedModel.getFeedDescription());
@@ -189,17 +210,74 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             btn2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "Button2 is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, MessagesActivity.class);
-                    mContext.startActivity(intent);
+                    Bundle args = new Bundle();
+                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                    FragmentActivity activity = (FragmentActivity)(mContext);
+                    android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
+                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                    WriteNoteDialog alertDialog = new WriteNoteDialog();
+                    alertDialog.setArguments(args);
+                    alertDialog.show(fm, "this is fragment");
+                    PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
                 }
             });
             btn3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "Button3 is clicked", Toast.LENGTH_SHORT).show();
+                    sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
                 }
             });
         }
+    }
+
+    public void sendReport(final String itemID, String reportBy){
+        class sendReport extends AsyncTask<String, Void, String> {
+            ProgressDialog progressDialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressDialog = new ProgressDialog(mContext,
+                        R.style.AppTheme_Dark_Dialog);
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Loading...");
+                progressDialog.show();
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(s);
+                    String result = jsonObject.getString("result");
+                    if(result.equalsIgnoreCase("1")){
+                        Log.d(Const.LOG_TAG, "send reply success");
+                        Toast.makeText(mContext, "Report successful", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Log.d(Const.LOG_TAG, "send reply failed");
+                        Toast.makeText(mContext, "Report failed", Toast.LENGTH_SHORT).show();
+                    }
+                    progressDialog.dismiss();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                HashMap<String,String> data = new HashMap<>();
+                data.put(Const.REPORT_ITEM, params[1]);
+
+                RegisterUserClass ruc = new RegisterUserClass();
+
+                String result = ruc.sendPostRequest(Const.REPORT_TIMELINE_URL + params[0],data);
+
+                Log.d(Const.LOG_TAG, result + "");
+                return result;
+            }
+        }
+        sendReport send = new sendReport();
+        send.execute(itemID, reportBy);
     }
 }

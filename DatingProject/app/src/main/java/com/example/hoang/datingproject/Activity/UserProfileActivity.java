@@ -70,25 +70,25 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
         finish();
     }
 
-    private void initData() {
-        FeedModel model = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます!");
-        FeedModel model2 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-        FeedModel model3 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-        FeedModel model4 = new FeedModel(R.drawable.avatar1, "ハン", "おはよう ございます");
-        FeedModel model5 = new FeedModel(R.drawable.avatar2, "ハン", "おはよう ございます");
-        FeedModel model6 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-        arr.add(model);
-        arr.add(model2);
-        arr.add(model3);
-        arr.add(model4);
-        arr.add(model5);
-        arr.add(model6);
-    }
+//    private void initData() {
+//        FeedModel model = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます!");
+//        FeedModel model2 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
+//        FeedModel model3 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
+//        FeedModel model4 = new FeedModel(R.drawable.avatar1, "ハン", "おはよう ございます");
+//        FeedModel model5 = new FeedModel(R.drawable.avatar2, "ハン", "おはよう ございます");
+//        FeedModel model6 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
+//        arr.add(model);
+//        arr.add(model2);
+//        arr.add(model3);
+//        arr.add(model4);
+//        arr.add(model5);
+//        arr.add(model6);
+//    }
 
     private void getControls() {
         recyclerView = (RecyclerView) UserProfileActivity.this.findViewById(R.id.recyclerview);
         arr = new ArrayList<FeedModel>();
-        initData();
+//        initData();
         adapter = new FeedsAdapter(UserProfileActivity.this, arr, recyclerView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(UserProfileActivity.this, LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);

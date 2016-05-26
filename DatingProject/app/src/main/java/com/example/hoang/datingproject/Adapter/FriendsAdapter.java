@@ -2,9 +2,12 @@ package com.example.hoang.datingproject.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.hoang.datingproject.Activity.MessagesActivity;
 import com.example.hoang.datingproject.Activity.UserProfileActivity;
 import com.example.hoang.datingproject.Model.PersonModel;
 
@@ -42,27 +46,29 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.mContext = mcontext;
         this.arr = arr;
 
-        notifyDataSetChanged();
-        final GridLayoutManager gridLayoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+        if (recyclerView.getLayoutManager() instanceof GridLayoutManager) {
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+            final GridLayoutManager linearLayoutManager = (GridLayoutManager) recyclerView
+                    .getLayoutManager();
 
-                if (gridLayoutManager != null) {
-                    totalItemCount = gridLayoutManager.getItemCount();
-                    lastVisibleItem = gridLayoutManager.findLastVisibleItemPosition();
-                }
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
 
-                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                    if (mOnLoadMoreListener != null) {
-                        mOnLoadMoreListener.onLoadMore();
+                    totalItemCount = linearLayoutManager.getItemCount();
+                    lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+
+                    if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold) && totalItemCount >=20) {
+                        if (mOnLoadMoreListener != null) {
+                            Log.d(Const.LOG_TAG, totalItemCount + "size" + "-" + lastVisibleItem + "position" + visibleThreshold);
+                            mOnLoadMoreListener.onLoadMore();
+                        }
+                        isLoading = true;
                     }
-                    isLoading = true;
                 }
-            }
-        });
+            });
+        }
     }
 
     public void setOnLoadMoreListener(OnLoadMoreListener mOnLoadMoreListener) {
@@ -91,7 +97,13 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (personModel.getImage() == null) {
                 Log.e(Const.LOG_TAG, "loi gi k biet");
             }else {
-                friendsHolder.avatarItem.setImageBitmap(personModel.getImage());
+                byte[] decodedString = Base64.decode(personModel.getImage(), Base64.DEFAULT);
+
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                if (decodedByte == null) {
+                    Log.e(Const.LOG_TAG, "null");
+                }
+                friendsHolder.avatarItem.setImageBitmap(decodedByte);
             }
 
         } else if (holder instanceof LoadingViewHolder) {
@@ -133,7 +145,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 @Override
                 public void onClick(View v) {
                     Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, UserProfileActivity.class);
+                    Intent intent = new Intent(mContext, MessagesActivity.class);
+                    intent.putExtra("model", arr.get(getAdapterPosition()));
                     mContext.startActivity(intent);
                 }
             });

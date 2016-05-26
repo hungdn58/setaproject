@@ -1,42 +1,40 @@
 package com.example.hoang.datingproject.Model;
 
+import java.io.Serializable;
+
 /**
  * Created by hoang on 4/5/2016.
  */
-public class MessageModel {
-    private int message_icon;
-    private String message_title;
+public class MessageModel implements Serializable{
+
+    private String message_icon;
+    private String message_pottime;
     private String message_content;
-    private String uid;
+    private String nickname;
+    private String friend_id;
 
-    public String getUid() {
-        return uid;
-    }
-
-    public void setUid(String uid) {
-        this.uid = uid;
-    }
-
-    public MessageModel(int message_icon, String message_title, String message_content) {
+    public MessageModel(String message_icon, String message_pottime, String message_content, String nickname, String friend_id) {
         this.message_icon = message_icon;
-        this.message_title = message_title;
+        this.message_pottime = message_pottime;
         this.message_content = message_content;
+        this.nickname = nickname;
+        this.friend_id = friend_id;
     }
 
-    public int getMessage_icon() {
+    public String getMessage_icon() {
         return message_icon;
     }
 
-    public void setMessage_icon(int message_icon) {
+    public void setMessage_icon(String message_icon) {
         this.message_icon = message_icon;
     }
 
-    public String getMessage_title() {
-        return message_title;
+    public String getMessage_pottime() {
+        return message_pottime;
     }
 
-    public void setMessage_title(String message_title) {
-        this.message_title = message_title;
+    public void setMessage_pottime(String message_pottime) {
+        this.message_pottime = message_pottime;
     }
 
     public String getMessage_content() {
@@ -45,5 +43,21 @@ public class MessageModel {
 
     public void setMessage_content(String message_content) {
         this.message_content = message_content;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getFriend_id() {
+        return friend_id;
+    }
+
+    public void setFriend_id(String friend_id) {
+        this.friend_id = friend_id;
     }
 }

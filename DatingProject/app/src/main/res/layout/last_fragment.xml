@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<android.support.v4.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/swipe2refresh">
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -47,7 +51,7 @@
                     android:layout_height="100dp"
                     android:layout_margin="5dp"
                     android:src="@drawable/profile"
-                    android:id="@+id/message_icon" />
+                    android:id="@+id/profile_icon" />
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -58,14 +62,14 @@
                         android:layout_height="wrap_content"
                         android:text="フン"
                         android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:id="@+id/message_title"/>
+                        android:id="@+id/profile_name"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Oversea, 27"
                         android:layout_marginTop="5dp"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:id="@+id/message_content"/>
+                        android:id="@+id/profile_address"/>
                 </LinearLayout>
             </LinearLayout>
             <TextView
@@ -74,6 +78,7 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="はじめまして、ベトナムです。"
                 android:layout_marginLeft="15dp"
+                android:id="@+id/profile_description"
                 android:layout_marginBottom="15dp"/>
         </LinearLayout>
 
@@ -87,3 +92,4 @@
             android:id="@+id/recyclerView">
         </android.support.v7.widget.RecyclerView>
     </LinearLayout>
+</android.support.v4.widget.SwipeRefreshLayout>

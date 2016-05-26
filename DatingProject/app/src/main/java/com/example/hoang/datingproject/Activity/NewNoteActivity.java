@@ -71,7 +71,7 @@ public class NewNoteActivity extends AppCompatActivity {
                     model.setFeedDescription(description.getText().toString());
                 }
                 Toast.makeText(NewNoteActivity.this, "bug", Toast.LENGTH_LONG).show();
-                model.setFeedIcon(R.drawable.profile);
+                model.setFeedIcon(PersonalInfoActivity.getDefaults("profileImage", NewNoteActivity.this));
                 model.setFeedTitle("ハン");
                 Intent intent = getIntent();
                 Bundle bundle = new Bundle();

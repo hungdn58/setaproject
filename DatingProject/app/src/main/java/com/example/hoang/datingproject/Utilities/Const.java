@@ -1,5 +1,7 @@
 package com.example.hoang.datingproject.Utilities;
 
+import com.example.hoang.datingproject.Fragment.WriteNoteDialog;
+
 /**
  * Created by hoang on 4/5/2016.
  */
@@ -31,6 +33,10 @@ public class Const {
 
     public static final int VIEW_TYPE_LOADING = 1;
 
+    public static final int SENDER = 7;
+
+    public static final int RECEIVER = 8;
+
     // feed fragment
     public static final String OFFSET = "offset";
     public static final String LIMIT = "limit";
@@ -38,13 +44,14 @@ public class Const {
     public static final String POST_USERID = "userID";
     public static final String POST_CONTENT = "content";
     public static final String ITEMID = "itemID";
-    public static final String REPLY_CONTENT = "content";
-    public static final String NEARBY = "nearby";
+    public static final String REPLY_CONTENT = "comments";
+    public static final String WRITE_USER = "writeUserID";
+    public static final String REPORT_ITEM = "reportBy";
     public static final String YEAROLD_FROM = "yearold_from";
     public static final String YEAROLD_to = "yearold_to";
     public static final String USERID1 = "userID1";
     public static final String USERID2 = "userID2";
-    public static final String FROM_USER = "from";
+    public static final String FROM_USER = "fromUser";
     public static final String MESSAGE = "message";
     public static final String USERID = "userId";
     public static final String PROFILE_IMAGE = "profileImage";
@@ -56,25 +63,34 @@ public class Const {
     public static final String RESULT = "result";
     public static final String DATA = "data";
     public static final String PROFILE_UID = "uid";
+    public static final String FRIEND_ID = "friend_id";
+
+    public static final String NOTIFICATION_TITLE = "title";
+    public static final String NOTIFICATION_CONTENT = "content";
+    public static final String NOTIFICATION_POSTTIME = "posttime";
+
+    public static final String IP = "172.16.61.29";
 
     //url
-    public static final String LIST_TIMELINE_URL = "http://192.168.1.74/timeline/list.json?" + OFFSET + "=0" + "&" + LIMIT + "=10";
-    public static final String POST_TIMELINE_URL = "http://192.168.1.74/timeline/post";
-    public static final String REPLY_TIMELINE_URL = "http://192.168.1.74/timeline/reply";
-    public static final String REPORT_TIMELINE_URL = "http://192.168.1.74/timeline/report";
-    public static final String DELETE_TIMELINE_URL = "http://192.168.1.74/timeline/delete";
-    public static final String SEARCH_LIST_USER_URL = "http://192.168.1.74/search/list.json?" + OFFSET + "=0" + LIMIT + "=10";
-    public static final String CHAT_LIST_URL = "http://192.168.1.74/chat/list.json?" + OFFSET + "=0" + LIMIT + "=10";
-    public static final String CHAT_LOG_URL = "http://192.168.1.74/chat/chat.json?" + OFFSET + "=0" + LIMIT + "=10";
-    public static final String CHAT_SEND_URL = "http://192.168.1.74/chat/send";
-    public static final String LIST_NOTIFICATION_URL = "http://192.168.1.74/notification/list.json?" + OFFSET + "=0" + LIMIT + "=10";
-    public static final String FOOT_PRINT_URL = "http://192.168.1.74/notification/footprint .json?" + OFFSET + "=0" + LIMIT + "=10";
-    public static final String USER_PROFILE_URL = "http://192.168.1.74/user/profile.json";
-    public static final String USER_PROFILE_UPDATE_URL = "http://192.168.1.74/user/profile/update";
-    public static final String USER_PROFILE_DELETE_URL = "http://192.168.1.74/user/profile/delete";
-    public static final String USER_CREATE_URL = "http://192.168.1.74/user/post";
-    public static final String USER_LIST_URL = "http://192.168.1.74/user/list.json";
-    public static final String USER_UPDATE_ID_URL = "http://192.168.1.74/user/update/";
+    public static final String SOCKET_URL = "http://" + IP + ":3000";
+    public static final String LIST_TIMELINE_URL = "http://" + IP + "/timeline/list.json?";
+    public static final String POST_TIMELINE_URL = "http://" + IP + "/timeline/post";
+    public static final String REPLY_TIMELINE_URL = "http://" + IP + "/timeline/reply";
+    public static final String REPORT_TIMELINE_URL = "http://" + IP + "/timeline/report/";
+    public static final String DELETE_TIMELINE_URL = "http://" + IP + "/timeline/delete/";
+    public static final String PROFILE_TIMELINE_URL = "http://" + IP + "/timeline/profile/list.json?id=";
+    public static final String SEARCH_LIST_USER_URL = "http://" + IP + "/search/list.json?" + OFFSET + "=0" + LIMIT + "=10";
+    public static final String CHAT_LIST_URL = "http://" + IP + "/chat/list.json?";
+    public static final String CHAT_LOG_URL = "http://" + IP + "/chat/chat.json?" + OFFSET + "=0" + "&" + LIMIT + "=15";
+    public static final String CHAT_SEND_URL = "http://" + IP + "/chat/send";
+    public static final String LIST_NOTIFICATION_URL = "http://" + IP + "/notification/list.json?" + OFFSET + "=0" + LIMIT + "=10";
+    public static final String FOOT_PRINT_URL = "http://" + IP + "/notification/footprint .json?" + OFFSET + "=0" + LIMIT + "=10";
+    public static final String USER_PROFILE_URL = "http://" + IP + "/user/profile.json/";
+    public static final String USER_PROFILE_UPDATE_URL = "http://" + IP + "/user/profile/update/";
+    public static final String USER_PROFILE_DELETE_URL = "http://" + IP + "/user/profile/delete";
+    public static final String USER_CREATE_URL = "http://" + IP + "/user/post";
+    public static final String USER_LIST_URL = "http://" + IP + "/user/list.json";
 
     public static final String FIRE_BASE_URL = "https://glowing-inferno-4146.firebaseio.com/";
+
 }

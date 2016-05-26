@@ -1,5 +1,6 @@
 package com.example.hoang.datingproject.Activity;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.example.hoang.datingproject.Fragment.BaseContainerFragment;
+import com.example.hoang.datingproject.Fragment.FeedsFragment;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.DatingContainer;
@@ -29,10 +31,9 @@ import com.google.android.gms.ads.AdView;
 import io.fabric.sdk.android.Fabric;
 
 
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
+public class MainActivity extends AppCompatActivity{
 
     private FragmentTabHost mTabHost;
-    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +61,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             }
         });
 
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe2refresh);
-
-        swipeRefreshLayout.setOnRefreshListener(this);
-
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -75,7 +72,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         String currentTabTag = mTabHost.getCurrentTabTag();
 
         if (currentTabTag.equals(Const.TAB_1_TAG)) {
-            isPopFragment = ((BaseContainerFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_1_TAG)).popFragment();
+            FeedsFragment feedsFragment = ((FeedsFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_1_TAG));
+//            feedsFragment.
         } else if (currentTabTag.equals(Const.TAB_2_TAG)) {
             isPopFragment = ((BaseContainerFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_2_TAG)).popFragment();
         }
@@ -106,17 +104,4 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         return spec.setIndicator(v);
     }
 
-    @Override
-    public void onRefresh() {
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                String tagName = mTabHost.getCurrentTabTag();
-                Toast.makeText(MainActivity.this, tagName, Toast.LENGTH_LONG).show();
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        }, 3000);
-    }
 }

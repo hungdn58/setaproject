@@ -8,12 +8,13 @@ import java.io.Serializable;
  * Created by hoang on 4/4/2016.
  */
 public class FeedModel implements Serializable{
-    private int feedIcon;
+    private String feedIcon;
     private String feedTitle;
     private String feedDescription;
     private String feedView;
     private String feedPubDate;
     private Bitmap image;
+    private String id;
 
     public String getFeedView() {
         return feedView;
@@ -33,20 +34,31 @@ public class FeedModel implements Serializable{
 
     public FeedModel() {}
 
-    public FeedModel(int feedIcon, String feedTitle, String feedDescription) {
+    public FeedModel(String feedIcon, String feedTitle, String feedDescription, String id) {
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.feedDescription = feedDescription;
+        this.id = id;
     }
 
-    public FeedModel(int feedIcon, String feedTitle, String feedDescription, Bitmap mimage) {
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public FeedModel(String feedIcon, String feedTitle, String feedDescription, Bitmap mimage, String id) {
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.feedDescription = feedDescription;
         this.image = mimage;
+        this.id = id;
+
     }
 
-    public FeedModel(int feedIcon, String feedTitle, Bitmap mimage) {
+    public FeedModel(String feedIcon, String feedTitle, Bitmap mimage) {
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.image = mimage;
@@ -60,11 +72,11 @@ public class FeedModel implements Serializable{
         this.image = image;
     }
 
-    public int getFeedIcon() {
+    public String getFeedIcon() {
         return feedIcon;
     }
 
-    public void setFeedIcon(int feedIcon) {
+    public void setFeedIcon(String feedIcon) {
         this.feedIcon = feedIcon;
     }
 

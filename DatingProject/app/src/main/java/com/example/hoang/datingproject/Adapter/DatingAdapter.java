@@ -3,6 +3,7 @@ package com.example.hoang.datingproject.Adapter;
 import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.hoang.datingproject.Model.MessageModel;
+import com.example.hoang.datingproject.Model.NotificationModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
@@ -22,40 +24,42 @@ import java.util.ArrayList;
  */
 public class DatingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context mContext;
-    private MessageModel messageModel;
-    private ArrayList<MessageModel> arr = new ArrayList<MessageModel>();
+    private NotificationModel notificationModel;
+    private ArrayList<NotificationModel> arr = new ArrayList<NotificationModel>();
 
     private OnLoadMoreListener mOnLoadMoreListener;
 
     private boolean isLoading;
-    private int visibleThreshold = 5;
+    private int visibleThreshold = 3;
     private int lastVisibleItem, totalItemCount;
 
-    public DatingAdapter(Context mcontext, ArrayList<MessageModel> arr, RecyclerView recyclerView) {
+    public DatingAdapter(Context mcontext, ArrayList<NotificationModel> arr, RecyclerView recyclerView) {
         this.mContext = mcontext;
         this.arr = arr;
 
-        notifyDataSetChanged();
-        final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
 
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
+            final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView
+                    .getLayoutManager();
 
-                if (linearLayoutManager != null) {
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+
                     totalItemCount = linearLayoutManager.getItemCount();
                     lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
-                }
 
-                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                    if (mOnLoadMoreListener != null) {
-                        mOnLoadMoreListener.onLoadMore();
+                    if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold) && totalItemCount >=5) {
+                        if (mOnLoadMoreListener != null) {
+                            Log.d(Const.LOG_TAG, totalItemCount + "size" + "-" + lastVisibleItem + "position" + visibleThreshold);
+                            mOnLoadMoreListener.onLoadMore();
+                        }
+                        isLoading = true;
                     }
-                    isLoading = true;
                 }
-            }
-        });
+            });
+        }
     }
 
     public void setOnLoadMoreListener(OnLoadMoreListener mOnLoadMoreListener) {
@@ -84,11 +88,12 @@ public class DatingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof DatingHolder) {
-            messageModel = arr.get(position);
+            notificationModel = arr.get(position);
             DatingHolder datingHolder = (DatingHolder) holder;
-            datingHolder.messageIcon.setImageResource(messageModel.getMessage_icon());
-            datingHolder.messageTitle.setText(messageModel.getMessage_title());
-            datingHolder.messageDescription.setText(messageModel.getMessage_content());
+            datingHolder.messageTitle.setText(notificationModel.getTitle());
+            datingHolder.messageDescription.setText(notificationModel.getContent());
+            datingHolder.posttime.setText(notificationModel.getPosttime());
+
         } else if (holder instanceof LoadingViewHolder) {
             LoadingViewHolder loadingViewHolder = (LoadingViewHolder) holder;
             loadingViewHolder.progressBar.setIndeterminate(true);
@@ -120,17 +125,16 @@ public class DatingAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     public class DatingHolder extends RecyclerView.ViewHolder{
 
-        private ImageView messageIcon;
         private TextView messageTitle;
         private TextView messageDescription;
+        private TextView posttime;
 
         public DatingHolder(View itemView) {
 
             super(itemView);
-            messageIcon = (ImageView) itemView.findViewById(R.id.message_icon);
             messageTitle = (TextView) itemView.findViewById(R.id.message_title);
             messageDescription = (TextView) itemView.findViewById(R.id.message_content);
-
+            posttime = (TextView) itemView.findViewById(R.id.posttime);
         }
     }
 }

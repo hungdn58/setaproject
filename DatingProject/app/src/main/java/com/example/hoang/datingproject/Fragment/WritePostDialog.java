@@ -2,7 +2,6 @@ package com.example.hoang.datingproject.Fragment;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
@@ -27,12 +26,11 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 /**
- * Created by hoang on 4/14/2016.
+ * Created by hoang on 5/26/2016.
  */
-public class WriteNoteDialog extends DialogFragment {
+public class WritePostDialog extends DialogFragment {
 
-    String itemID;
-    Dialog dialog;
+    private Dialog dialog;
 
     @NonNull
     @Override
@@ -43,9 +41,6 @@ public class WriteNoteDialog extends DialogFragment {
         builder.setView(view);
 
         dialog = builder.create();
-
-        itemID = getArguments().getString("itemID");
-        Log.d(Const.LOG_TAG, itemID);
 
         TextView exit_button = (TextView) view.findViewById(R.id.exit_button);
         TextView post_button = (TextView) view.findViewById(R.id.post);
@@ -65,15 +60,16 @@ public class WriteNoteDialog extends DialogFragment {
         post_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendReply(itemID, reply_item.getText().toString(), PersonalInfoActivity.getDefaults("id", getActivity()));
+                postTimeline(PersonalInfoActivity.getDefaults("id", getActivity()), reply_item.getText().toString());
             }
         });
 
         return dialog;
     }
 
-    public void sendReply(final String itemID, String contents, String writeUserID){
-        class SendReply extends AsyncTask<String, Void, String> {
+    public void postTimeline(final String userID, String contents){
+        class PostTimeline extends AsyncTask<String, Void, String> {
+
             ProgressDialog progressDialog;
 
             @Override
@@ -82,24 +78,24 @@ public class WriteNoteDialog extends DialogFragment {
                 progressDialog = new ProgressDialog(getActivity(),
                         R.style.AppTheme_Dark_Dialog);
                 progressDialog.setIndeterminate(true);
-                progressDialog.setMessage("Loading...");
+                progressDialog.setMessage("Posting...");
                 progressDialog.show();
             }
 
             @Override
             protected void onPostExecute(String s) {
                 super.onPostExecute(s);
+                progressDialog.dismiss();
+                dialog.dismiss();
 
                 try {
                     JSONObject jsonObject = new JSONObject(s);
                     String result = jsonObject.getString("result");
                     if(result.equalsIgnoreCase("1")){
-                        Log.d(Const.LOG_TAG, "send reply success");
+                        Log.d(Const.LOG_TAG, "post timeline success");
                     }else{
-                        Log.d(Const.LOG_TAG, "send reply failed");
+                        Log.d(Const.LOG_TAG, "post timeline failed");
                     }
-                    dialog.dismiss();
-                    progressDialog.dismiss();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -108,19 +104,18 @@ public class WriteNoteDialog extends DialogFragment {
             @Override
             protected String doInBackground(String... params) {
                 HashMap<String,String> data = new HashMap<>();
-                data.put(Const.ITEMID,params[0]);
-                data.put(Const.REPLY_CONTENT,params[1]);
-                data.put(Const.WRITE_USER,params[2]);
+                data.put("userID",params[0]);
+                data.put("contents",params[1]);
 
                 RegisterUserClass ruc = new RegisterUserClass();
 
-                String result = ruc.sendPostRequest(Const.REPLY_TIMELINE_URL,data);
+                String result = ruc.sendPostRequest(Const.POST_TIMELINE_URL,data);
 
                 Log.d(Const.LOG_TAG, result + "");
                 return result;
             }
         }
-        SendReply send = new SendReply();
-        send.execute(itemID, contents, writeUserID);
+        PostTimeline getData = new PostTimeline();
+        getData.execute(userID, contents);
     }
 }
