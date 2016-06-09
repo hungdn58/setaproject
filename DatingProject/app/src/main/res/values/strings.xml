@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DatingProject</string>
+    <string name="app_name">Dating App</string>
     <string name="feed_text">This is Feed Fragment</string>
     <string name="friend_text">This is Friend Fragment</string>
     <string name="message_text">This is Message Fragment</string>

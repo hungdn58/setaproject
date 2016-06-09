@@ -1,12 +1,14 @@
 package com.example.hoang.datingproject.Activity;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +23,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -31,12 +35,25 @@ import android.widget.Toast;
 
 import com.example.hoang.datingproject.Adapter.FeedsAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.InboxModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
+import com.example.hoang.datingproject.Utilities.RegisterUserClass;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class UserProfileActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
 
@@ -46,9 +63,11 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
     private Button activity_log, user, more;
     private TextView edit_cover,edit_profile, camera, status, music;
     private RelativeLayout edit_cover_photo, edit_profile_photo, new_post;
-    private ImageView cover, profile;
+    private ImageView cover, profile, newPostProfile;
     private Bitmap img = null;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private TextView nickname;
+    private FeedModel feedModel = new FeedModel();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,22 +89,8 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
         finish();
     }
 
-//    private void initData() {
-//        FeedModel model = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます!");
-//        FeedModel model2 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-//        FeedModel model3 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-//        FeedModel model4 = new FeedModel(R.drawable.avatar1, "ハン", "おはよう ございます");
-//        FeedModel model5 = new FeedModel(R.drawable.avatar2, "ハン", "おはよう ございます");
-//        FeedModel model6 = new FeedModel(R.drawable.avatar, "ハン", "おはよう ございます");
-//        arr.add(model);
-//        arr.add(model2);
-//        arr.add(model3);
-//        arr.add(model4);
-//        arr.add(model5);
-//        arr.add(model6);
-//    }
-
     private void getControls() {
+
         recyclerView = (RecyclerView) UserProfileActivity.this.findViewById(R.id.recyclerview);
         arr = new ArrayList<FeedModel>();
 //        initData();
@@ -96,12 +101,6 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
-        recyclerView.post(new Runnable() {
-            @Override
-            public void run() {
-                recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
-            }
-        });
 
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe2refresh);
         swipeRefreshLayout.setOnRefreshListener(this);
@@ -153,6 +152,23 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
 
         cover = (ImageView) findViewById(R.id.cover);
         profile = (ImageView) findViewById(R.id.profile);
+        newPostProfile = (ImageView) findViewById(R.id.new_post_profile);
+
+        Intent intent = getIntent();
+        Bundle bundle = intent.getBundleExtra("data");
+        feedModel = (FeedModel) bundle.getSerializable("model");
+
+        postFootPrint(PersonalInfoActivity.getDefaults("id", UserProfileActivity.this), feedModel.getUserID());
+        String profileImage = feedModel.getFeedIcon();
+
+        nickname = (TextView) findViewById(R.id.nickname);
+        nickname.setText(feedModel.getFeedTitle());
+
+        byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        profile.setImageBitmap(decodedByte);
+        newPostProfile.setImageBitmap(decodedByte);
 
         edit_cover_photo = (RelativeLayout) findViewById(R.id.edit_cover_photo);
         edit_profile_photo = (RelativeLayout) findViewById(R.id.edit_profile_photo);
@@ -186,6 +202,8 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
                 startActivityForResult(intent, Const.NEW_NOTE);
             }
         });
+
+        new GetData().execute(Const.PROFILE_TIMELINE_URL + feedModel.getUserID() + "&" + Const.LIMIT + "=" + 100 + "&" + Const.OFFSET + "=" + 1);
 
 //        final RelativeLayout relativeLayout = (RelativeLayout) findViewById(R.id.container);
         final CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
@@ -284,12 +302,16 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
 
     @Override
     public void onRefresh() {
+
         recyclerView.post(new Runnable() {
             @Override
             public void run() {
+
                         new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
+
+                        new GetData().execute(Const.PROFILE_TIMELINE_URL + feedModel.getUserID() + "&" + Const.LIMIT + "=" + 100 + "&" + Const.OFFSET + "=" + 1);
 
                         recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
                         swipeRefreshLayout.setRefreshing(false);
@@ -297,5 +319,136 @@ public class UserProfileActivity extends AppCompatActivity implements SwipeRefre
                 }, 3000);
             }
         });
+    }
+
+    private class GetData extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            ArrayList<Double> resultList = null;
+            HttpURLConnection connection = null;
+            StringBuilder jsonResults = new StringBuilder();
+            String result = "";
+
+            try {
+                StringBuilder sb = new StringBuilder(params[0]);
+
+                URL url = new URL(sb.toString());
+                Log.d(Const.LOG_TAG, url.toString());
+                connection = (HttpURLConnection) url.openConnection();
+                InputStreamReader in = new InputStreamReader(connection.getInputStream());
+
+                int read;
+                char[] buff = new char[1024];
+                while ((read = in.read(buff)) != -1) {
+                    jsonResults.append(buff, 0, read);
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            result = jsonResults.toString();
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String doubles) {
+
+//            Log.d(Const.LOG_TAG, encodedImage);
+
+            try{
+
+                JSONObject jsonObject = new JSONObject(doubles);
+                Log.d(Const.LOG_TAG, jsonObject.toString());
+                String result = jsonObject.getString("result");
+                if (result.equalsIgnoreCase("1")) {
+                    JSONArray data = jsonObject.getJSONArray("data");
+                    ArrayList<FeedModel> arrayList = new ArrayList<FeedModel>();
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject item = data.getJSONObject(i);
+                        String content = item.getString(Const.POST_CONTENT);
+                        String profileImage = item.getString(Const.PROFILE_IMAGE);
+                        String nickname = item.getString(Const.NICK_NAME);
+                        String itemID = item.getString(Const.ITEMID);
+
+                        Log.d(Const.LOG_TAG, content + " - " + profileImage + " - " + nickname);
+
+                        FeedModel model = new FeedModel(profileImage, nickname, content, itemID);
+
+                        arrayList.add(model);
+                    }
+                    arr.clear();
+                    arr.addAll(arrayList);
+                    adapter.notifyDataSetChanged();
+//                    progressDialog.dismiss();
+                    swipeRefreshLayout.setRefreshing(false);
+                    adapter.setLoaded();
+                    recyclerView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+                        }
+                    });
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void postFootPrint(final String footprintID, String visiter){
+        class PostFootPrint extends AsyncTask<String, Void, String> {
+
+            ProgressDialog progressDialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(s);
+                    String result = jsonObject.getString("result");
+                    if(result.equalsIgnoreCase("1")){
+                        Log.d(Const.LOG_TAG, "post footprint success");
+                    }else{
+                        Log.d(Const.LOG_TAG, "post footprint failed");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                HashMap<String,String> data = new HashMap<>();
+                data.put("footprintID",params[0]);
+                data.put("visitor",params[1]);
+
+                RegisterUserClass ruc = new RegisterUserClass();
+
+                String result = ruc.sendPostRequest(Const.POST_FOOT_PRINT_URL,data);
+
+                Log.d(Const.LOG_TAG, result + "");
+                return result;
+            }
+        }
+        PostFootPrint getData = new PostFootPrint();
+        getData.execute(footprintID, visiter);
     }
 }

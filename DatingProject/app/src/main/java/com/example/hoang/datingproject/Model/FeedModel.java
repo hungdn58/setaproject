@@ -15,6 +15,15 @@ public class FeedModel implements Serializable{
     private String feedPubDate;
     private Bitmap image;
     private String id;
+    private String userID;
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
 
     public String getFeedView() {
         return feedView;
@@ -38,7 +47,16 @@ public class FeedModel implements Serializable{
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.feedDescription = feedDescription;
+        this.image = null;
         this.id = id;
+    }
+
+    public FeedModel(String feedIcon, String feedTitle, Bitmap image, String id) {
+        this.feedIcon = feedIcon;
+        this.feedTitle = feedTitle;
+        this.image = image;
+        this.id = id;
+        this.feedDescription = null;
     }
 
     public String getId() {
@@ -49,13 +67,13 @@ public class FeedModel implements Serializable{
         this.id = id;
     }
 
-    public FeedModel(String feedIcon, String feedTitle, String feedDescription, Bitmap mimage, String id) {
+    public FeedModel(String feedIcon, String feedTitle, String feedDescription, Bitmap mimage, String id, String userID) {
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.feedDescription = feedDescription;
         this.image = mimage;
         this.id = id;
-
+        this.userID = userID;
     }
 
     public FeedModel(String feedIcon, String feedTitle, Bitmap mimage) {

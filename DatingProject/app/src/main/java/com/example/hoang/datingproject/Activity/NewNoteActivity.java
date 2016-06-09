@@ -1,13 +1,17 @@
 package com.example.hoang.datingproject.Activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,11 +25,16 @@ import com.example.hoang.datingproject.Model.InboxModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
+import com.example.hoang.datingproject.Utilities.RegisterUserClass;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 
 public class NewNoteActivity extends AppCompatActivity {
 
@@ -33,6 +42,7 @@ public class NewNoteActivity extends AppCompatActivity {
     private ImageView new_note_image;
     private Bitmap img = null;
     private EditText description;
+    private String image_des = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,23 +76,7 @@ public class NewNoteActivity extends AppCompatActivity {
         plus_icon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FeedModel model = new FeedModel();
-                if (description.getText() != null) {
-                    model.setFeedDescription(description.getText().toString());
-                }
-                Toast.makeText(NewNoteActivity.this, "bug", Toast.LENGTH_LONG).show();
-                model.setFeedIcon(PersonalInfoActivity.getDefaults("profileImage", NewNoteActivity.this));
-                model.setFeedTitle("ハン");
-                Intent intent = getIntent();
-                Bundle bundle = new Bundle();
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                img.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] image = stream.toByteArray();
-                bundle.putSerializable("feed_item", model);
-                bundle.putByteArray("img", image);
-                intent.putExtra("data", bundle);
-                setResult(Const.RETURN_NEW_NOTE, intent);
-                finish();
+                postTimeline(PersonalInfoActivity.getDefaults("id", NewNoteActivity.this), description.getText().toString(), image_des );
             }
         });
 
@@ -136,6 +130,9 @@ public class NewNoteActivity extends AppCompatActivity {
                 img = imageBitmap;
 
                 new_note_image.setImageBitmap(img);
+
+                img = getResizedBitmap(img, 200);
+                image_des = convertBitmapToString(img);
 //                model = new FeedModel(newFormat,imageBitmap);
 //                arr.add(model);
 //                adapter.notifyDataSetChanged();
@@ -158,10 +155,91 @@ public class NewNoteActivity extends AppCompatActivity {
                 img = BitmapFactory.decodeFile(fileSrc, options);
                 new_note_image.setImageBitmap(img);
 
+                img = getResizedBitmap(img, 200);
+                image_des = convertBitmapToString(img);
+
 //                model = new InboxModel(newFormat,img);
 //                arr.add(model);
 //                adapter.notifyDataSetChanged();
             }
         }
+    }
+
+    public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
+    }
+
+    private String convertBitmapToString(Bitmap image) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+
+        byte[] b = baos.toByteArray();
+        String profileImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+        return profileImage;
+    }
+
+    public void postTimeline(final String userID, String contents, String image){
+        class PostTimeline extends AsyncTask<String, Void, String> {
+
+            ProgressDialog progressDialog;
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                progressDialog = new ProgressDialog(NewNoteActivity.this,
+                        R.style.AppTheme_Dark_Dialog);
+                progressDialog.setIndeterminate(true);
+                progressDialog.setMessage("Posting...");
+                progressDialog.show();
+            }
+
+            @Override
+            protected void onPostExecute(String s) {
+                super.onPostExecute(s);
+                progressDialog.dismiss();
+
+                try {
+                    JSONObject jsonObject = new JSONObject(s);
+                    String result = jsonObject.getString("result");
+                    if(result.equalsIgnoreCase("1")){
+                        Log.d(Const.LOG_TAG, "post timeline success");
+                    }else{
+                        Log.d(Const.LOG_TAG, "post timeline failed");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                finish();
+            }
+
+            @Override
+            protected String doInBackground(String... params) {
+                HashMap<String,String> data = new HashMap<>();
+                data.put("userID",params[0]);
+                data.put("contents",params[1]);
+                data.put("image", params[2]);
+
+                RegisterUserClass ruc = new RegisterUserClass();
+
+                String result = ruc.sendPostRequest(Const.POST_TIMELINE_URL,data);
+
+                Log.d(Const.LOG_TAG, result + "");
+                return result;
+            }
+        }
+        PostTimeline getData = new PostTimeline();
+        getData.execute(userID, contents, image);
     }
 }

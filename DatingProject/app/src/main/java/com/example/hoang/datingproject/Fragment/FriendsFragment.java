@@ -1,6 +1,8 @@
 package com.example.hoang.datingproject.Fragment;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
@@ -122,7 +124,8 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     public void showDialog(){
         SearchAccountDialogFragment myDialog = new SearchAccountDialogFragment();
-        myDialog.show(getFragmentManager(), "My Dialog");
+        myDialog.setTargetFragment(FriendsFragment.this, Const.SEARCH_FRAGMENT);
+        myDialog.show(getFragmentManager().beginTransaction(), "My Dialog");
     }
 
     private class GetData extends AsyncTask<String, Void, String> {
@@ -248,6 +251,107 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
         SendChat send = new SendChat();
         send.execute(userID1, userID2, contents, from);
+    }
+
+    private class GetFilterData extends AsyncTask<String, Void, String> {
+
+        ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(getActivity(),
+                    R.style.AppTheme_Dark_Dialog);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Searching...");
+            progressDialog.show();
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            HttpURLConnection connection = null;
+            StringBuilder jsonResults = new StringBuilder();
+            String result = "";
+
+            try {
+                StringBuilder sb = new StringBuilder(params[0]);
+
+                URL url = new URL(sb.toString());
+                Log.d(Const.LOG_TAG, url.toString());
+                connection = (HttpURLConnection) url.openConnection();
+                InputStreamReader in = new InputStreamReader(connection.getInputStream());
+
+                int read;
+                char[] buff = new char[1024];
+                while ((read = in.read(buff)) != -1) {
+                    jsonResults.append(buff, 0, read);
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            result = jsonResults.toString();
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String doubles) {
+
+            try{
+
+                JSONObject jsonObject = new JSONObject(doubles);
+                Log.d(Const.LOG_TAG, jsonObject.toString());
+                String result = jsonObject.getString("result");
+                if (result.equalsIgnoreCase("1")) {
+                    JSONArray data = jsonObject.getJSONArray("data");
+                    ArrayList<PersonModel> arrayList = new ArrayList<PersonModel>();
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject item = data.getJSONObject(i);
+
+                        String profileImage = item.getString(Const.PROFILE_IMAGE);
+                        String userID = item.getString(Const.USERID);
+                        String nickname = item.getString(Const.NICK_NAME);
+
+                        Log.d(Const.LOG_TAG, userID + " - " + nickname);
+
+                        PersonModel model = new PersonModel(profileImage, nickname, userID);
+
+                        arrayList.add(model);
+                    }
+                    arr.clear();
+                    arr.addAll(arrayList);
+                    adapter.notifyDataSetChanged();
+                    progressDialog.dismiss();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case Const.SEARCH_FRAGMENT:
+                if (resultCode == Activity.RESULT_OK) {
+                    // here the part where I get my selected date from the saved variable in the intent and the displaying it.
+                    Bundle bundle = data.getExtras();
+                    String gender = bundle.getString("gender", "male");
+                    int minAge = bundle.getInt("minAge", 15);
+                    int maxAge = bundle.getInt("maxAge", 100);
+
+                    new GetFilterData().execute(Const.SEARCH_LIST_USER_URL + Const.GENDER + "=" + gender
+                    + "&" + Const.YEAROLD_FROM + "=" + minAge
+                    + "&" + Const.YEAROLD_TO + "=" + maxAge);
+                }
+                break;
+        }
     }
 
 }

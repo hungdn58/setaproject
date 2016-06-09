@@ -28,12 +28,10 @@
         android:paddingTop="10dp"
         android:paddingBottom="5dp"
         android:background="@drawable/inbox_item_background">
-        <TextView
+        <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold"
-            android:id="@+id/inbox_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/inbox_image"
             android:layout_centerInParent="true"/>
     </RelativeLayout>
 

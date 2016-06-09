@@ -35,6 +35,7 @@ import com.example.hoang.datingproject.Fragment.FeedsFragment;
 import com.example.hoang.datingproject.Model.FeedModel;
 import com.example.hoang.datingproject.Model.ImageItem;
 import com.example.hoang.datingproject.Model.InboxModel;
+import com.example.hoang.datingproject.Model.MessageModel;
 import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
@@ -48,6 +49,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -80,6 +82,8 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
     private ArrayList<Integer> imgId = new ArrayList<Integer>();
     private PersonModel friend = new PersonModel();
     private MediaPlayer media;
+    private String receiverProfile;
+    private String receiverID;
 
     private Socket mSocket;
     {
@@ -99,7 +103,24 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
 
         Intent intent = getIntent();
 
-        friend = (PersonModel) intent.getSerializableExtra("model");
+        int from = intent.getIntExtra("from", 0);
+
+        if (from == Const.FROM_FRIEND_ADAPTER) {
+            friend = (PersonModel) intent.getSerializableExtra("model");
+            receiverProfile = friend.getImage();
+            receiverID = friend.getId();
+            Log.d(Const.LOG_TAG, "vao 1");
+        } else if (from == Const.FROM_FEED_ADAPTER) {
+            FeedModel feedModel = (FeedModel) intent.getSerializableExtra("model");
+            receiverProfile = feedModel.getFeedIcon();
+            receiverID = feedModel.getUserID();
+            Log.d(Const.LOG_TAG, "vao 2");
+        } else if (from == Const.FROM_MESSAGE_ADAPTER) {
+            MessageModel messageModel = (MessageModel) intent.getSerializableExtra("model");
+            receiverProfile = messageModel.getMessage_icon();
+            receiverID = messageModel.getFriend_id();
+            Log.d(Const.LOG_TAG, "vao 3");
+        }
 
         String senderId = PersonalInfoActivity.getDefaults("id", MessagesActivity.this);
 
@@ -142,27 +163,14 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
 
-        mSocket.emit("client-chat-client", friend.getId());
+        mSocket.emit("client-chat-client", receiverID);
         mSocket.on("updatechat", onNewMessage_UpdateChat);
+        mSocket.on("updatechatimage", onNewMessage_UpdateChatImage);
 //        scrollToTop();
 //        recyclerView.setHasFixedSize(true);
-        new GetData().execute(Const.CHAT_LOG_URL + "&id1=" + PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + "&id2=" + friend.getId());
+        new GetData().execute(Const.CHAT_LOG_URL + "&id1=" + PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + "&id2=" + receiverID);
 
     }
-
-//    private ArrayList<InboxModel> getData() {
-//        ArrayList<InboxModel> arrayList = new ArrayList<InboxModel>();
-//        InboxModel model = new InboxModel("16:21", "こんばんは(^-^)/", 1);
-//        InboxModel model1 = new InboxModel("21:21", "ありがとう", 2);
-//        Bitmap icon = BitmapFactory.decodeResource(MessagesActivity.this.getResources(),
-//                R.drawable.avatar);
-//        InboxModel model2 = new InboxModel("01:05", icon);
-//        arrayList.add(model);
-//        arrayList.add(model1);
-//        arrayList.add(model2);
-//
-//        return arrayList;
-//    }
 
     @Override
     public void onClick(View v) {
@@ -172,8 +180,8 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                     Toast.makeText(MessagesActivity.this, "empty messages", Toast.LENGTH_SHORT).show();
                 }else {
                     mSocket.emit("client-gui-chat", message_edittext.getText().toString());
-                    sendChat(PersonalInfoActivity.getDefaults("id", MessagesActivity.this), friend.getId(), message_edittext.getText().toString(),PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
-                    Log.d(Const.LOG_TAG, PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + friend.getId() + message_edittext.getText().toString() + PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
+                    sendChat(PersonalInfoActivity.getDefaults("id", MessagesActivity.this), receiverID, message_edittext.getText().toString(),PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
+                    Log.d(Const.LOG_TAG, PersonalInfoActivity.getDefaults("id", MessagesActivity.this) + receiverID + message_edittext.getText().toString() + PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
                     message_edittext.setText("");
                 }
                 break;
@@ -263,14 +271,18 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
         SimpleDateFormat sdf = new SimpleDateFormat("HH:MM");
         Date c = Calendar.getInstance().getTime();
         String newFormat = sdf.format(c);
+        String message;
         if (requestCode == Const.REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             if (data != null) {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-//                model = new InboxModel(newFormat,imageBitmap);
-//                arr.add(model);
-                adapter.notifyDataSetChanged();
+                imageBitmap = getResizedBitmap(imageBitmap, 200);
+
+                message = convertBitmapToString(imageBitmap);
+
+                mSocket.emit("client-gui-image-chat", message);
+                sendChat(PersonalInfoActivity.getDefaults("id", MessagesActivity.this), receiverID, message, PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
 //                scrollToTop();
             }
         } else if (requestCode == Const.PICTURE_CHOOSE && resultCode == RESULT_OK) {
@@ -289,12 +301,46 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                 options.inJustDecodeBounds = false;
                 img = BitmapFactory.decodeFile(fileSrc, options);
 
-//                model = new InboxModel(newFormat,img);
-//                arr.add(model);
-                adapter.notifyDataSetChanged();
+                img = getResizedBitmap(img, 200);
+                message = convertBitmapToString(img);
+                mSocket.emit("client-gui-image-chat", message);
+                sendChat(PersonalInfoActivity.getDefaults("id", MessagesActivity.this), receiverID, message, PersonalInfoActivity.getDefaults("id", MessagesActivity.this));
+//                adapter.notifyDataSetChanged();
 //                scrollToTop();
             }
         }
+    }
+
+    private String convertBitmapToString(Bitmap image) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+
+        byte[] b = baos.toByteArray();
+        String profileImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+        return profileImage;
+    }
+
+    private Bitmap convertStringtoBitmap(String image) {
+        byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        return decodedByte;
+    }
+
+    public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
     private void scrollToTop() {
@@ -370,12 +416,19 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                         String content = item.getString("content");
                         String posttime = item.getString("posttime");
                         String fromID = item.getString("fromID");
+                        InboxModel model;
 
-                        InboxModel model = new InboxModel(posttime, content, fromID, profileImage);
+                        if (content.length() > 500) {
+                            Bitmap image = convertStringtoBitmap(content);
+                            model = new InboxModel(posttime, image, fromID, profileImage);
+                        } else {
+                            model = new InboxModel(posttime, content, fromID, profileImage);
+                        }
 
                         arr.add(model);
                         adapter.notifyDataSetChanged();
                     }
+                    scrollToTop();
                     progressDialog.dismiss();
                 }
             } catch (JSONException e) {
@@ -418,6 +471,7 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                 public void run() {
                     JSONObject data = (JSONObject) args[0];
                     String noidung;
+                    String imageMessage;
                     String userID;
                     String profileImage;
                     media = MediaPlayer.create(MessagesActivity.this, R.raw.ting);
@@ -430,18 +484,62 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                         if (userID.equalsIgnoreCase(PersonalInfoActivity.getDefaults("id", MessagesActivity.this))) {
                             profileImage = PersonalInfoActivity.getDefaults("profileImage", MessagesActivity.this);
 
-                        }else {
-                            profileImage = friend.getImage();
+                        } else {
+                            profileImage = receiverProfile;
                         }
                         SimpleDateFormat sdf = new SimpleDateFormat("HH:MM");
                         Date c = Calendar.getInstance().getTime();
                         String newFormat = sdf.format(c);
 
-                        InboxModel model = new InboxModel(newFormat, noidung, userID, profileImage );
+                        InboxModel model = new InboxModel(newFormat, noidung, userID, profileImage);
 
                         arr.add(model);
                         adapter.notifyDataSetChanged();
                         scrollToTop();
+                    } catch (JSONException e) {
+                        return;
+                    }
+                    // add the message to view
+                }
+            });
+        }
+    };
+
+    private Emitter.Listener onNewMessage_UpdateChatImage = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject data = (JSONObject) args[0];
+                    String imageMessage;
+                    String userID;
+                    String profileImage;
+                    media = MediaPlayer.create(MessagesActivity.this, R.raw.ting);
+                    media.start();
+
+                    try {
+                        userID = data.getString("username");
+                        imageMessage = data.getString("image");
+
+                        Bitmap image = convertStringtoBitmap(imageMessage);
+
+                        if (userID.equalsIgnoreCase(PersonalInfoActivity.getDefaults("id", MessagesActivity.this))) {
+                            profileImage = PersonalInfoActivity.getDefaults("profileImage", MessagesActivity.this);
+
+                        } else {
+                            profileImage = receiverProfile;
+                        }
+                        SimpleDateFormat sdf = new SimpleDateFormat("HH:MM");
+                        Date c = Calendar.getInstance().getTime();
+                        String newFormat = sdf.format(c);
+
+                        InboxModel model = new InboxModel(newFormat, image, userID, profileImage);
+                        Log.d(Const.LOG_TAG, "send image successful");
+                        arr.add(model);
+                        adapter.notifyDataSetChanged();
+                        scrollToTop();
+
                     } catch (JSONException e) {
                         return;
                     }

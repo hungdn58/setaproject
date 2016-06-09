@@ -1,7 +1,9 @@
 package com.example.hoang.datingproject.Fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,14 +15,18 @@ import android.widget.TextView;
 
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.FontManager;
+import com.yahoo.mobile.client.android.util.rangeseekbar.RangeSeekBar;
 
 /**
  * Created by hoang on 4/17/2016.
  */
 public class SearchAccountDialogFragment extends DialogFragment implements View.OnClickListener{
 
-    private Button bt1, bt2, bt3;
+    private Button bt1, bt2, bt3, search;
     private Dialog dialog;
+    private RangeSeekBar<Integer> rangeSeekBar;
+    private int minAge, maxAge;
+    private String gender = "male";
 
     @NonNull
     @Override
@@ -39,14 +45,28 @@ public class SearchAccountDialogFragment extends DialogFragment implements View.
         bt1 = (Button) view.findViewById(R.id.personal_btn1);
         bt2 = (Button) view.findViewById(R.id.personal_btn2);
         bt3 = (Button) view.findViewById(R.id.personal_btn3);
+        search = (Button) view.findViewById(R.id.searchPeople);
+
+        rangeSeekBar = (RangeSeekBar<Integer>) view.findViewById(R.id.rangeseekbar);
+        minAge = 15;
+        maxAge = 100;
 
         bt1.setOnClickListener(this);
         bt2.setOnClickListener(this);
         bt3.setOnClickListener(this);
+        search.setOnClickListener(this);
         exit_button.setOnClickListener(this);
 
         bt1.setSelected(true);
         bt1.setPressed(true);
+
+        rangeSeekBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener<Integer>() {
+            @Override
+            public void onRangeSeekBarValuesChanged(RangeSeekBar<?> bar, Integer minValue, Integer maxValue) {
+                minAge = minValue;
+                maxAge = maxValue;
+            }
+        });
 
         return dialog;
     }
@@ -61,6 +81,7 @@ public class SearchAccountDialogFragment extends DialogFragment implements View.
                 bt2.setPressed(false);
                 bt3.setSelected(false);
                 bt3.setPressed(false);
+                gender = "male";
                 break;
             case R.id.personal_btn2:
                 bt1.setSelected(false);
@@ -69,6 +90,7 @@ public class SearchAccountDialogFragment extends DialogFragment implements View.
                 bt2.setPressed(true);
                 bt3.setSelected(false);
                 bt3.setPressed(false);
+                gender = "female";
                 break;
             case R.id.personal_btn3:
                 bt1.setSelected(false);
@@ -77,6 +99,15 @@ public class SearchAccountDialogFragment extends DialogFragment implements View.
                 bt2.setPressed(false);
                 bt3.setSelected(true);
                 bt3.setPressed(true);
+                gender = "gay/les";
+                break;
+            case R.id.searchPeople:
+                Intent intent = new Intent();
+                intent.putExtra("minAge", minAge);
+                intent.putExtra("maxAge", maxAge);
+                intent.putExtra("gender", gender);
+                getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, intent);
+                dialog.dismiss();
                 break;
             case R.id.exit_button:
                 dialog.dismiss();

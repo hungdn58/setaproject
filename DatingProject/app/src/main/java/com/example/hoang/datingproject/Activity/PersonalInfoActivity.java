@@ -159,18 +159,14 @@ public class PersonalInfoActivity extends AppCompatActivity implements View.OnCl
                     String name = nickname.getText().toString();
                     String birthday = old.getText().toString();
                     String description = editInfo.getText().toString();
+                    String profileImage = PersonalInfoActivity.getDefaults("profileImage", this);
 
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     if (img != null) {
                         img.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
-                    } else {
-                        Bitmap icon = BitmapFactory.decodeResource(this.getResources(),
-                                R.drawable.avatar);
-                        icon.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+                        byte[] b = baos.toByteArray();
+                        profileImage = Base64.encodeToString(b, Base64.DEFAULT);
                     }
-
-                    byte[] b = baos.toByteArray();
-                    String profileImage = Base64.encodeToString(b, Base64.DEFAULT);
 
                     updateUser(name, profileImage, birthday, gender, description);
                 }

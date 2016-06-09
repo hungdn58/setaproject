@@ -170,77 +170,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 @Override
                 public void onClick(View v) {
                     Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    new GetProfileData().execute(Const.USER_PROFILE_URL + arr.get(getAdapterPosition()).getFriend_id());
-                }
-            });
-        }
-    }
-
-    private class GetProfileData extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-        @Override
-        protected String doInBackground(String... params) {
-            ArrayList<Double> resultList = null;
-            HttpURLConnection connection = null;
-            StringBuilder jsonResults = new StringBuilder();
-            String result = "";
-
-            try {
-                StringBuilder sb = new StringBuilder(params[0]);
-
-                URL url = new URL(sb.toString());
-                Log.d(Const.LOG_TAG, url.toString());
-                connection = (HttpURLConnection) url.openConnection();
-                InputStreamReader in = new InputStreamReader(connection.getInputStream());
-
-                int read;
-                char[] buff = new char[1024];
-                while ((read = in.read(buff)) != -1) {
-                    jsonResults.append(buff, 0, read);
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-            result = jsonResults.toString();
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String doubles) {
-            try{
-
-                JSONObject jsonObject = new JSONObject(doubles);
-                Log.d(Const.LOG_TAG, jsonObject.toString());
-                String result = jsonObject.getString("result");
-                if (result.equalsIgnoreCase("1")) {
-                    JSONObject data = jsonObject.getJSONObject("data");
-                    String address = data.getString(Const.ADDRESS);
-                    String profileImage = data.getString(Const.PROFILE_IMAGE);
-                    String nickname = data.getString(Const.NICK_NAME);
-                    String description = data.getString(Const.DESCRIPTION);
-                    String userID = data.getString(Const.USERID);
-
-                    PersonModel model = new PersonModel(profileImage, nickname, userID);
-
                     Intent intent = new Intent(mContext, MessagesActivity.class);
-                    intent.putExtra("model", model);
+                    intent.putExtra("from", Const.FROM_MESSAGE_ADAPTER);
+                    intent.putExtra("model", arr.get(getAdapterPosition()));
                     mContext.startActivity(intent);
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            });
         }
     }
 }

@@ -17,7 +17,9 @@ import android.widget.Button;
 import android.widget.TabHost;
 
 import com.example.hoang.datingproject.Adapter.DatingAdapter;
+import com.example.hoang.datingproject.Adapter.FootPrintAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.FootPrintModel;
 import com.example.hoang.datingproject.Model.MessageModel;
 import com.example.hoang.datingproject.Model.NotificationModel;
 import com.example.hoang.datingproject.R;
@@ -45,7 +47,9 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
     private TabHost tabHost;
     private RecyclerView recyclerView1, recyclerView2;
     private DatingAdapter adapter;
+    private FootPrintAdapter adapter1;
     private ArrayList<NotificationModel> arr = new ArrayList<NotificationModel>();
+    private ArrayList<FootPrintModel> arr1 = new ArrayList<FootPrintModel>();
     private SwipeRefreshLayout swipeRefreshLayout;
 
     @Nullable
@@ -74,14 +78,25 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
         btn2.setOnClickListener(this);
 
         recyclerView1 = (RecyclerView) getActivity().findViewById(R.id.listFriend);
+        recyclerView2 = (RecyclerView) getActivity().findViewById(R.id.listFriend2);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
-        recyclerView1.setLayoutManager(linearLayoutManager);
+        recyclerView2.setLayoutManager(linearLayoutManager);
         arr.add(null);
-        adapter = new DatingAdapter(getActivity(), arr, recyclerView1);
+        adapter = new DatingAdapter(getActivity(), arr, recyclerView2);
         adapter.notifyItemInserted(arr.size() - 1);
-        recyclerView1.setAdapter(adapter);
+        recyclerView2.setAdapter(adapter);
+
+        recyclerView2.setHasFixedSize(true);
+
+        LinearLayoutManager linearLayoutManager1 = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+//        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
+        recyclerView1.setLayoutManager(linearLayoutManager1);
+        arr.add(null);
+        adapter1 = new FootPrintAdapter(getActivity(), arr1, recyclerView1);
+        adapter1.notifyItemInserted(arr.size() - 1);
+        recyclerView1.setAdapter(adapter1);
 
         recyclerView1.setHasFixedSize(true);
 
@@ -110,7 +125,96 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
                 }, 5000);
             }
         });
+        new GetFootPrints().execute(Const.FOOT_PRINT_URL);
         new GetData().execute(Const.LIST_NOTIFICATION_URL);
+    }
+
+    public class GetFootPrints extends AsyncTask<String, Void, String> {
+        ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(getActivity(),
+                    R.style.AppTheme_Dark_Dialog);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage("Loading...");
+            progressDialog.show();
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            ArrayList<Double> resultList = null;
+            HttpURLConnection connection = null;
+            StringBuilder jsonResults = new StringBuilder();
+            String result = "";
+
+            try {
+                StringBuilder sb = new StringBuilder(params[0]);
+
+                URL url = new URL(sb.toString());
+                Log.d(Const.LOG_TAG, url.toString());
+                connection = (HttpURLConnection) url.openConnection();
+                InputStreamReader in = new InputStreamReader(connection.getInputStream());
+
+                int read;
+                char[] buff = new char[1024];
+                while ((read = in.read(buff)) != -1) {
+                    jsonResults.append(buff, 0, read);
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+            result = jsonResults.toString();
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String doubles) {
+
+//            Log.d(Const.LOG_TAG, encodedImage);
+
+            try{
+
+                JSONObject jsonObject = new JSONObject(doubles);
+                Log.d(Const.LOG_TAG, jsonObject.toString());
+                String result = jsonObject.getString("result");
+                if (result.equalsIgnoreCase("1")) {
+                    ArrayList<FootPrintModel> arrayList = new ArrayList<FootPrintModel>();
+                    JSONArray data = jsonObject.getJSONArray("data");
+
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject item = data.getJSONObject(i);
+                        String nickname = item.getString(Const.NICK_NAME);
+                        String address = item.getString(Const.ADDRESS);
+                        String posttime = item.getString(Const.POSTTIME);
+                        String profileImage = item.getString(Const.PROFILE_IMAGE);
+                        String userID = item.getString(Const.USERID);
+
+                        Log.d(Const.LOG_TAG, nickname + " - " + address + " - " + posttime);
+
+                        FootPrintModel model = new FootPrintModel(nickname, userID, address, profileImage, posttime);
+
+                        arrayList.add(model);
+
+                    }
+                    arr1.clear();
+                    arr1.addAll(arrayList);
+                    adapter1.notifyDataSetChanged();
+                    progressDialog.dismiss();
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void loadTabs(){
@@ -119,12 +223,12 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
         TabHost.TabSpec spec;
         spec = tabHost.newTabSpec("listfriend1");
         spec.setContent(R.id.tab1);
-        spec.setIndicator("All Friends");
+        spec.setIndicator("FootPrints");
         tabHost.addTab(spec);
 
         spec = tabHost.newTabSpec("listfriend2");
         spec.setContent(R.id.tab2);
-        spec.setIndicator("Best Friends");
+        spec.setIndicator("Notifications");
         tabHost.addTab(spec);
 
         tabHost.setCurrentTab(0);
@@ -163,6 +267,7 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
     @Override
     public void onRefresh() {
         new GetData().execute(Const.LIST_NOTIFICATION_URL);
+        new GetFootPrints().execute(Const.FOOT_PRINT_URL);
     }
 
     public class GetData extends AsyncTask<String, Void, String> {

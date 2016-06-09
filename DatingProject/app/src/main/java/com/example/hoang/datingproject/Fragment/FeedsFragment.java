@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.hoang.datingproject.Activity.NewNoteActivity;
 import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
 import com.example.hoang.datingproject.Activity.WrittingNoteActivity;
 import com.example.hoang.datingproject.Adapter.DatingAdapter;
@@ -110,9 +111,9 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         new_note.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(getActivity(), WrittingNoteActivity.class);
-//                getActivity().startActivity(intent);
-                showDialog();
+                Intent intent = new Intent(getActivity(), NewNoteActivity.class);
+                getActivity().startActivity(intent);
+//                showDialog();
             }
         });
 
@@ -135,6 +136,13 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public void showDialog(){
         WritePostDialog myDialog = new WritePostDialog();
         myDialog.show(getFragmentManager(), "My Dialog");
+    }
+
+    private Bitmap convertStringtoBitmap(String image) {
+        byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        return decodedByte;
     }
 
     public class GetData extends AsyncTask<String, Void, String> {
@@ -198,10 +206,15 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                         String profileImage = item.getString(Const.PROFILE_IMAGE);
                         String nickname = item.getString(Const.NICK_NAME);
                         String itemID = item.getString(Const.ITEMID);
+                        String image = item.getString(Const.IMAGE);
+
+                        JSONObject replyTo = item.getJSONObject(Const.REPLY_TO);
+
+                        String userID = replyTo.getString("userID");
 
                         Log.d(Const.LOG_TAG, content + " - " + profileImage + " - " + nickname);
-                        Log.d(Const.LOG_TAG, profileImage.length() + "size");
-                        FeedModel model = new FeedModel(profileImage, nickname, content, itemID);
+
+                        FeedModel model = new FeedModel(profileImage, nickname, content, convertStringtoBitmap(image),itemID, userID);
 
                         arrayList.add(model);
 
@@ -211,90 +224,6 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                     adapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
                     adapter.setLoaded();
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public class AddData extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-//            progressDialog = new ProgressDialog(getActivity(),
-//                    R.style.AppTheme_Dark_Dialog);
-//            progressDialog.setIndeterminate(true);
-//            progressDialog.setMessage("Loading...");
-//            progressDialog.show();
-        }
-        @Override
-        protected String doInBackground(String... params) {
-            ArrayList<Double> resultList = null;
-            HttpURLConnection connection = null;
-            StringBuilder jsonResults = new StringBuilder();
-            String result = "";
-
-            try {
-                StringBuilder sb = new StringBuilder(params[0]);
-
-                URL url = new URL(sb.toString());
-                Log.d(Const.LOG_TAG, url.toString());
-                connection = (HttpURLConnection) url.openConnection();
-                InputStreamReader in = new InputStreamReader(connection.getInputStream());
-
-                int read;
-                char[] buff = new char[1024];
-                while ((read = in.read(buff)) != -1) {
-                    jsonResults.append(buff, 0, read);
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-            result = jsonResults.toString();
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String doubles) {
-
-//            Log.d(Const.LOG_TAG, encodedImage);
-
-            try{
-
-                JSONObject jsonObject = new JSONObject(doubles);
-                Log.d(Const.LOG_TAG, jsonObject.toString());
-                String result = jsonObject.getString("result");
-                if (result.equalsIgnoreCase("1")) {
-                    ArrayList<FeedModel> arrayList = new ArrayList<FeedModel>();
-                    JSONArray data = jsonObject.getJSONArray("data");
-                    arr.remove(arr.size() - 1);
-                    adapter.notifyItemRemoved(arr.size());
-                    for (int i = 0; i < data.length(); i++) {
-                        JSONObject item = data.getJSONObject(i);
-                        String content = item.getString(Const.POST_CONTENT);
-                        String profileImage = item.getString(Const.PROFILE_IMAGE);
-                        String nickname = item.getString(Const.NICK_NAME);
-                        String itemID = item.getString(Const.ITEMID);
-
-                        Log.d(Const.LOG_TAG, content + " - " + profileImage + " - " + nickname);
-                        Log.d(Const.LOG_TAG, profileImage.length() + "size");
-                        FeedModel model = new FeedModel(profileImage, nickname, content, itemID);
-
-                        arr.add(model);
-                        adapter.notifyDataSetChanged();
-                    }
-
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

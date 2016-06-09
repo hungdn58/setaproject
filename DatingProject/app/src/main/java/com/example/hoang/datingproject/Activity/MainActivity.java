@@ -56,8 +56,9 @@ public class MainActivity extends AppCompatActivity{
         mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             @Override
             public void onTabChanged(String tabId) {
-//                TextView txt = (TextView) mTabHost.getTabWidget().getChildTabViewAt(mTabHost.getCurrentTab()).findViewById(R.id.img_tabtxt);
-//                txt.setTextColor(getResources().getColor(R.color.colorAccent));
+                if (mTabHost.getCurrentTabTag() != null) {
+                    getCurrentTab();
+                }
             }
         });
 
@@ -68,12 +69,16 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     public void onBackPressed() {
+        getCurrentTab();
+    }
+
+    private void getCurrentTab() {
         boolean isPopFragment = false;
         String currentTabTag = mTabHost.getCurrentTabTag();
 
         if (currentTabTag.equals(Const.TAB_1_TAG)) {
-            FeedsFragment feedsFragment = ((FeedsFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_1_TAG));
-//            feedsFragment.
+            isPopFragment = ((BaseContainerFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_1_TAG)).popFragment();
+//
         } else if (currentTabTag.equals(Const.TAB_2_TAG)) {
             isPopFragment = ((BaseContainerFragment)getSupportFragmentManager().findFragmentByTag(Const.TAB_2_TAG)).popFragment();
         }
