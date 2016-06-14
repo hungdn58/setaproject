@@ -16,13 +16,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TabHost;
 
+import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
 import com.example.hoang.datingproject.Adapter.DatingAdapter;
 import com.example.hoang.datingproject.Adapter.FootPrintAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
 import com.example.hoang.datingproject.Model.FootPrintModel;
 import com.example.hoang.datingproject.Model.MessageModel;
 import com.example.hoang.datingproject.Model.NotificationModel;
+import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
+import com.example.hoang.datingproject.Utilities.AsyncRespond;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
 
@@ -48,9 +51,23 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
     private RecyclerView recyclerView1, recyclerView2;
     private DatingAdapter adapter;
     private FootPrintAdapter adapter1;
+    private int LIMIT = 5;
+    private int LIMIT1 = 5;
+    private int OFFSET = 1;
     private ArrayList<NotificationModel> arr = new ArrayList<NotificationModel>();
-    private ArrayList<FootPrintModel> arr1 = new ArrayList<FootPrintModel>();
+    private ArrayList<FootPrintModel> arr1, temp_arr;
+
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        arr1 = new ArrayList<FootPrintModel>();
+        arr1.add(null);
+        temp_arr = new ArrayList<FootPrintModel>();
+        methodThatStartsTheAsyncTask();
+//        new GetData((AsynData) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
 
     @Nullable
     @Override
@@ -93,7 +110,7 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
         LinearLayoutManager linearLayoutManager1 = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
         recyclerView1.setLayoutManager(linearLayoutManager1);
-        arr.add(null);
+
         adapter1 = new FootPrintAdapter(getActivity(), arr1, recyclerView1);
         adapter1.notifyItemInserted(arr.size() - 1);
         recyclerView1.setAdapter(adapter1);
@@ -107,39 +124,36 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
                 adapter.notifyItemInserted(arr.size() - 1);
 
                 //Load more data for reyclerview
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        //Remove loading item
-                        arr.remove(arr.size() - 1);
-                        adapter.notifyItemRemoved(arr.size());
-
-                        //Load data
-                        int index = arr.size();
-                        int end = index + 6;
-
-                        adapter.notifyDataSetChanged();
-                        adapter.setLoaded();
-                    }
-                }, 5000);
+                LIMIT1 += 5;
+                new GetData().execute(Const.LIST_NOTIFICATION_URL + Const.LIMIT + "=" + LIMIT1 + "&" + Const.OFFSET + "=" + OFFSET);
             }
         });
-        new GetFootPrints().execute(Const.FOOT_PRINT_URL);
-        new GetData().execute(Const.LIST_NOTIFICATION_URL);
+
+        adapter1.setOnLoadMoreListener(new OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                arr1.add(null);
+                adapter1.notifyItemInserted(arr.size() - 1);
+
+                //Load more data for reyclerview
+                LIMIT += 5;
+                methodThatStartsTheAsyncTask();
+            }
+        });
+        methodThatStartsTheAsyncTask();
+        new GetData().execute(Const.LIST_NOTIFICATION_URL + Const.LIMIT + "=" + LIMIT1 + "&" + Const.OFFSET + "=" + OFFSET);
     }
 
     public class GetFootPrints extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
+        private AsyncRespond listener;
+
+        public GetFootPrints(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog = new ProgressDialog(getActivity(),
-                    R.style.AppTheme_Dark_Dialog);
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage("Loading...");
-            progressDialog.show();
         }
         @Override
         protected String doInBackground(String... params) {
@@ -179,8 +193,6 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
         @Override
         protected void onPostExecute(String doubles) {
 
-//            Log.d(Const.LOG_TAG, encodedImage);
-
             try{
 
                 JSONObject jsonObject = new JSONObject(doubles);
@@ -205,11 +217,10 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
                         arrayList.add(model);
 
                     }
-                    arr1.clear();
-                    arr1.addAll(arrayList);
-                    adapter1.notifyDataSetChanged();
-                    progressDialog.dismiss();
-                    swipeRefreshLayout.setRefreshing(false);
+                    temp_arr.clear();
+                    temp_arr.addAll(arrayList);
+
+                    listener.processDatingFinish(temp_arr);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -264,10 +275,61 @@ public class DatingFragment extends Fragment implements View.OnClickListener, Sw
         }
     }
 
+    private void methodThatStartsTheAsyncTask() {
+        GetFootPrints testAsyncTask = new GetFootPrints(new AsyncRespond() {
+
+
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+                methodThatDoesSomethingWhenTaskIsDone(arr);
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+            }
+        });
+
+        testAsyncTask.execute(Const.FOOT_PRINT_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
+
+    private void methodThatDoesSomethingWhenTaskIsDone(ArrayList<FootPrintModel> temp_arr) {
+        /* Magic! */
+        arr1.clear();
+        arr1.addAll(temp_arr);
+
+        if (adapter1 != null) {
+            adapter1.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            adapter1.setLoaded();
+            Log.d(Const.LOG_TAG, "refresh3");
+        }
+    }
+
     @Override
     public void onRefresh() {
-        new GetData().execute(Const.LIST_NOTIFICATION_URL);
-        new GetFootPrints().execute(Const.FOOT_PRINT_URL);
+        LIMIT = 5;
+        LIMIT1 = 5;
+        new GetData().execute(Const.LIST_NOTIFICATION_URL + Const.LIMIT + "=" + LIMIT1 + "&" + Const.OFFSET + "=" + OFFSET);
+        methodThatStartsTheAsyncTask();
     }
 
     public class GetData extends AsyncTask<String, Void, String> {

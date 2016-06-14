@@ -89,17 +89,6 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 new DeleteUser().execute(Const.USER_PROFILE_DELETE_URL + PersonalInfoActivity.getDefaults("id", SettingsActivity.this));
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                Bitmap icon = BitmapFactory.decodeResource(getResources(),
-                        R.drawable.avatar);
-                icon.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
-
-                byte[] b = baos.toByteArray();
-                String profileImage = Base64.encodeToString(b, Base64.DEFAULT);
-
-                PersonalInfoActivity.setDefault("id", "0", SettingsActivity.this);
-                PersonalInfoActivity.setDefault("profileImage", profileImage, SettingsActivity.this);
             }
         });
     }
@@ -155,6 +144,17 @@ public class SettingsActivity extends AppCompatActivity {
                 if (result.equalsIgnoreCase("1")) {
                     Log.d(Const.LOG_TAG, "delete user successful!");
                     Toast.makeText(SettingsActivity.this, "delete user successful!", Toast.LENGTH_SHORT).show();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    Bitmap icon = BitmapFactory.decodeResource(getResources(),
+                            R.drawable.avatar);
+                    icon.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
+
+                    byte[] b = baos.toByteArray();
+                    String profileImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+                    PersonalInfoActivity.setDefault("id", "123", SettingsActivity.this);
+                    PersonalInfoActivity.setDefault("profileImage", profileImage, SettingsActivity.this);
                 } else {
                     Log.d(Const.LOG_TAG, "delete user failed!");
                     Toast.makeText(SettingsActivity.this, "delete user failed!", Toast.LENGTH_SHORT).show();

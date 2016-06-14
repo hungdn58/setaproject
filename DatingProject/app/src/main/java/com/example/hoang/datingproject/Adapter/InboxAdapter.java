@@ -170,19 +170,6 @@ public class InboxAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     mContext.startActivity(intent);
                 }
             });
-
-            avatar.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-//                    Intent intent = new Intent(mContext, UserProfileActivity.class);
-//                    Bundle bundle = new Bundle();
-//                    if (arr.get(getAdapterPosition()) != null) {
-//                        bundle.putSerializable("model", arr.get(getAdapterPosition()));
-//                        intent.putExtra("data", bundle);
-//                        mContext.startActivity(intent);
-//                    }
-                }
-            });
         }
 
         public void setImage(Bitmap bmp){

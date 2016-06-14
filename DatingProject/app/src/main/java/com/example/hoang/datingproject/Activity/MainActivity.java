@@ -1,22 +1,25 @@
 package com.example.hoang.datingproject.Activity;
 
-import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
-import android.os.Handler;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTabHost;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TabHost;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.example.hoang.datingproject.Fragment.BaseContainerFragment;
 import com.example.hoang.datingproject.Fragment.FeedsFragment;
+import com.example.hoang.datingproject.Utilities.NotificationListener;
 import com.example.hoang.datingproject.R;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.DatingContainer;
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void initView() {
+        startService(new Intent(this, NotificationListener.class));
         mTabHost = (FragmentTabHost) findViewById(R.id.tabHost);
         mTabHost.setup(this, getSupportFragmentManager(), R.id.tabContent);
 
@@ -53,14 +57,31 @@ public class MainActivity extends AppCompatActivity{
         mTabHost.addTab(setIndicator(MainActivity.this, mTabHost.newTabSpec(Const.TAB_4_TAG), R.drawable.bg_tabs, "通知", R.string.datings_icon), DatingContainer.class, null);
         mTabHost.addTab(setIndicator(MainActivity.this, mTabHost.newTabSpec(Const.TAB_5_TAG), R.drawable.bg_tabs, "プロフ", R.string.emotion_icon), LastFragmentContainer.class, null);
 
-        mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
-            @Override
-            public void onTabChanged(String tabId) {
-                if (mTabHost.getCurrentTabTag() != null) {
-                    getCurrentTab();
-                }
-            }
-        });
+//        mTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+//
+//            @Override
+//            public void onTabChanged(String tabId) {
+//
+//                String currentTabTag = mTabHost.getCurrentTabTag();
+//
+//                Log.e(Const.LOG_TAG, currentTabTag);
+//
+//                FragmentManager fragmentManager = MainActivity.this.getSupportFragmentManager();
+//                FragmentTransaction transaction = fragmentManager.beginTransaction();
+//
+//                BaseContainerFragment fragment1 = (BaseContainerFragment) fragmentManager.findFragmentByTag(currentTabTag);
+//
+//                if (fragment1 != null) {
+//                    fragment1.replaceFragment(new FeedsFragment(), true);
+////            ((BaseContainerFragment)fragmentManager.findFragmentByTag(fragmentTag)).popFragment();
+//                    Log.e(Const.LOG_TAG, "124");
+//
+//                }
+//
+//                transaction.addToBackStack(currentTabTag);
+//                transaction.commit();
+//            }
+//        });
 
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();

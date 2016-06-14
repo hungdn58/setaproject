@@ -1,9 +1,11 @@
 package com.example.hoang.datingproject.Adapter;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -142,6 +144,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             byte[] decodedString = Base64.decode(feedModel.getFeedIcon(), Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             feedHolder.feedIcon.setImageBitmap(decodedByte);
+            feedHolder.feedDate.setText(feedModel.getBirthday() + ", 女性");
             feedHolder.feedTitle.setText(feedModel.getFeedTitle());
             feedHolder.feedDescription.setText(feedModel.getFeedDescription());
 
@@ -161,6 +164,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             feedHolder.feedIcon.setImageBitmap(decodedByte);
             feedHolder.feedTitle.setText(feedModel.getFeedTitle());
+            feedHolder.feedDate.setText(feedModel.getBirthday() + ", 女性");
             feedHolder.feedDescription.setText(feedModel.getFeedDescription());
 
             feedHolder.btn1_icon.setText(R.string.btn1_icon);
@@ -177,6 +181,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             feedHolder.feedIcon.setImageBitmap(decodedByte);
             feedHolder.feedTitle.setText(feedModel.getFeedTitle());
+            feedHolder.feedDate.setText(feedModel.getBirthday() + ", 女性");
             feedHolder.feed_description_image.setImageBitmap(feedModel.getImage());
 
             feedHolder.btn1_icon.setText(R.string.btn1_icon);
@@ -216,7 +221,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public class FeedHolder extends RecyclerView.ViewHolder{
 
         private ImageView feedIcon, feed_description_image;
-        private TextView feedTitle;
+        private TextView feedTitle, feedDate;
         private TextView feedDescription;
         private RelativeLayout btn1, btn2, btn3;
         private TextView btn1_icon, btn2_icon, btn3_icon;
@@ -225,6 +230,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             super(itemView);
             feedIcon = (ImageView) itemView.findViewById(R.id.feed_image);
             feedTitle = (TextView) itemView.findViewById(R.id.feed_title);
+            feedDate = (TextView) itemView.findViewById(R.id.feed_date);
             feedDescription = (TextView) itemView.findViewById(R.id.feed_description);
             feed_description_image = (ImageView) itemView.findViewById(R.id.feed_description_image);
 
@@ -268,32 +274,44 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             btn2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, MessagesActivity.class);
-                    intent.putExtra("from", Const.FROM_FEED_ADAPTER);
-                    intent.putExtra("model", arr.get(getAdapterPosition()));
-                    mContext.startActivity(intent);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(mContext, MessagesActivity.class);
+                        intent.putExtra("from", Const.FROM_FEED_ADAPTER);
+                        intent.putExtra("model", arr.get(getAdapterPosition()));
+                        mContext.startActivity(intent);
+                    }
                 }
             });
 
             btn1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Bundle args = new Bundle();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    FragmentActivity activity = (FragmentActivity)(mContext);
-                    android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    WriteNoteDialog alertDialog = new WriteNoteDialog();
-                    alertDialog.setArguments(args);
-                    alertDialog.show(fm, "this is fragment");
-                    PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        FragmentActivity activity = (FragmentActivity) (mContext);
+                        android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        WriteNoteDialog alertDialog = new WriteNoteDialog();
+                        alertDialog.setArguments(args);
+                        alertDialog.show(fm, "this is fragment");
+                        PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    }
                 }
             });
             btn3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    }
                 }
             });
         }
@@ -302,7 +320,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public class FeedHolderContent extends RecyclerView.ViewHolder{
 
         private ImageView feedIcon, feed_description_image;
-        private TextView feedTitle;
+        private TextView feedTitle, feedDate;
         private TextView feedDescription;
         private RelativeLayout btn1, btn2, btn3;
         private TextView btn1_icon, btn2_icon, btn3_icon;
@@ -311,6 +329,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             super(itemView);
             feedIcon = (ImageView) itemView.findViewById(R.id.feed_image);
             feedTitle = (TextView) itemView.findViewById(R.id.feed_title);
+            feedDate = (TextView) itemView.findViewById(R.id.feed_date);
             feedDescription = (TextView) itemView.findViewById(R.id.feed_description);
 
             btn1 = (RelativeLayout) itemView.findViewById(R.id.feed_btn1);
@@ -337,32 +356,44 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             btn2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, MessagesActivity.class);
-                    intent.putExtra("from", Const.FROM_FEED_ADAPTER);
-                    intent.putExtra("model", arr.get(getAdapterPosition()));
-                    mContext.startActivity(intent);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(mContext, MessagesActivity.class);
+                        intent.putExtra("from", Const.FROM_FEED_ADAPTER);
+                        intent.putExtra("model", arr.get(getAdapterPosition()));
+                        mContext.startActivity(intent);
+                    }
                 }
             });
 
             btn1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Bundle args = new Bundle();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    FragmentActivity activity = (FragmentActivity)(mContext);
-                    android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    WriteNoteDialog alertDialog = new WriteNoteDialog();
-                    alertDialog.setArguments(args);
-                    alertDialog.show(fm, "this is fragment");
-                    PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        FragmentActivity activity = (FragmentActivity) (mContext);
+                        android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        WriteNoteDialog alertDialog = new WriteNoteDialog();
+                        alertDialog.setArguments(args);
+                        alertDialog.show(fm, "this is fragment");
+                        PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    }
                 }
             });
             btn3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    }
                 }
             });
         }
@@ -371,7 +402,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public class FeedHolderImage extends RecyclerView.ViewHolder{
 
         private ImageView feedIcon, feed_description_image;
-        private TextView feedTitle;
+        private TextView feedTitle, feedDate;
         private TextView feedDescription;
         private RelativeLayout btn1, btn2, btn3;
         private TextView btn1_icon, btn2_icon, btn3_icon;
@@ -380,6 +411,7 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             super(itemView);
             feedIcon = (ImageView) itemView.findViewById(R.id.feed_image);
             feedTitle = (TextView) itemView.findViewById(R.id.feed_title);
+            feedDate = (TextView) itemView.findViewById(R.id.feed_date);
             feed_description_image = (ImageView) itemView.findViewById(R.id.feed_description_image);
 
             btn1 = (RelativeLayout) itemView.findViewById(R.id.feed_btn1);
@@ -422,35 +454,69 @@ public class FeedsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             btn2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, MessagesActivity.class);
-                    intent.putExtra("from", Const.FROM_FEED_ADAPTER);
-                    intent.putExtra("model", arr.get(getAdapterPosition()));
-                    mContext.startActivity(intent);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(mContext, MessagesActivity.class);
+                        intent.putExtra("from", Const.FROM_FEED_ADAPTER);
+                        intent.putExtra("model", arr.get(getAdapterPosition()));
+                        mContext.startActivity(intent);
+                    }
                 }
             });
 
             btn1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Bundle args = new Bundle();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    FragmentActivity activity = (FragmentActivity)(mContext);
-                    android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
-                    args.putString("itemID", arr.get(getAdapterPosition()).getId());
-                    WriteNoteDialog alertDialog = new WriteNoteDialog();
-                    alertDialog.setArguments(args);
-                    alertDialog.show(fm, "this is fragment");
-                    PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        FragmentActivity activity = (FragmentActivity) (mContext);
+                        android.support.v4.app.FragmentManager fm = activity.getSupportFragmentManager();
+                        args.putString("itemID", arr.get(getAdapterPosition()).getId());
+                        WriteNoteDialog alertDialog = new WriteNoteDialog();
+                        alertDialog.setArguments(args);
+                        alertDialog.show(fm, "this is fragment");
+                        PersonalInfoActivity.setDefault("itemID", arr.get(getAdapterPosition()).getId(), mContext);
+                    }
                 }
             });
             btn3.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        sendReport(arr.get(getAdapterPosition()).getId(), PersonalInfoActivity.getDefaults("id", mContext));
+                    }
                 }
             });
         }
+    }
+
+    private void createDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("Update Account");
+        builder.setMessage("You need to update your personal account to perform this action?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(mContext, PersonalInfoActivity.class);
+                mContext.startActivity(intent);
+            }
+        });
+
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.show();
     }
 
     public void sendReport(final String itemID, String reportBy){

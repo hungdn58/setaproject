@@ -104,8 +104,9 @@ public class Const {
     public static final String CHAT_LIST_URL = "http://" + IP + "/chat/list.json?";
     public static final String CHAT_LOG_URL = "http://" + IP + "/chat/chat.json?" + OFFSET + "=0" + "&" + LIMIT + "=100";
     public static final String CHAT_SEND_URL = "http://" + IP + "/chat/send";
-    public static final String LIST_NOTIFICATION_URL = "http://" + IP + "/notification/list.json?" + OFFSET + "=0" + "&" + LIMIT + "=10";
-    public static final String FOOT_PRINT_URL = "http://" + IP + "/notification/footprint.json?" + OFFSET + "=0" + "&" + LIMIT + "=10";
+    public static final String NOTIFICATION_SEND_URL = "http://" + IP + "/notification/post";
+    public static final String LIST_NOTIFICATION_URL = "http://" + IP + "/notification/list.json?";
+    public static final String FOOT_PRINT_URL = "http://" + IP + "/notification/footprint.json?";
     public static final String POST_FOOT_PRINT_URL = "http://" + IP + "/notification/footprint/post";
     public static final String USER_PROFILE_URL = "http://" + IP + "/user/profile.json/";
     public static final String USER_PROFILE_UPDATE_URL = "http://" + IP + "/user/profile/update/";
@@ -113,6 +114,6 @@ public class Const {
     public static final String USER_CREATE_URL = "http://" + IP + "/user/post";
     public static final String USER_LIST_URL = "http://" + IP + "/user/list.json";
 
-    public static final String FIRE_BASE_URL = "https://glowing-inferno-4146.firebaseio.com/";
+    public static final String FIRE_BASE_URL = "https://glowing-inferno-4146.firebaseio.com/Notification";
 
 }

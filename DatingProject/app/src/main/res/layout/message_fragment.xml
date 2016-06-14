@@ -37,17 +37,5 @@
             android:layout_height="wrap_content"
             android:id="@+id/recyclerView">
         </android.support.v7.widget.RecyclerView>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ProgressBar
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_centerInParent="true"
-                style="?android:attr/progressBarStyleSmall"
-                android:layout_marginTop="10dp"/>
-        </RelativeLayout>
-
     </LinearLayout>
 </android.support.v4.widget.SwipeRefreshLayout>

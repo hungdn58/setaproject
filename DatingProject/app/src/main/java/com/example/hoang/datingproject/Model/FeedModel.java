@@ -13,6 +13,16 @@ public class FeedModel implements Serializable{
     private String feedDescription;
     private String feedView;
     private String feedPubDate;
+    private String birthday;
+
+    public String getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(String birthday) {
+        this.birthday = birthday;
+    }
+
     private Bitmap image;
     private String id;
     private String userID;
@@ -67,12 +77,13 @@ public class FeedModel implements Serializable{
         this.id = id;
     }
 
-    public FeedModel(String feedIcon, String feedTitle, String feedDescription, Bitmap mimage, String id, String userID) {
+    public FeedModel(String feedIcon, String feedTitle, String feedDescription, Bitmap mimage, String id, String userID, String birthday) {
         this.feedIcon = feedIcon;
         this.feedTitle = feedTitle;
         this.feedDescription = feedDescription;
         this.image = mimage;
         this.id = id;
+        this.birthday = birthday;
         this.userID = userID;
     }
 

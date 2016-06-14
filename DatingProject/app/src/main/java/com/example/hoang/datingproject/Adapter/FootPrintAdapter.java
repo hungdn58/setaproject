@@ -55,7 +55,7 @@ public class FootPrintAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
                     if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold) && totalItemCount >=5) {
                         if (mOnLoadMoreListener != null) {
-                            Log.d(Const.LOG_TAG, totalItemCount + "size" + "-" + lastVisibleItem + "position" + visibleThreshold);
+//                            Log.d(Const.LOG_TAG, totalItemCount + "size" + "-" + lastVisibleItem + "position" + visibleThreshold);
                             mOnLoadMoreListener.onLoadMore();
                         }
                         isLoading = true;

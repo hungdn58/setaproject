@@ -27,7 +27,11 @@ import com.example.hoang.datingproject.Activity.SettingsActivity;
 import com.example.hoang.datingproject.Adapter.FeedsAdapter;
 import com.example.hoang.datingproject.Adapter.LastFragmentAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.FootPrintModel;
+import com.example.hoang.datingproject.Model.MessageModel;
+import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
+import com.example.hoang.datingproject.Utilities.AsyncRespond;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
@@ -36,6 +40,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -51,14 +56,43 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
     private RecyclerView recyclerView;
     private LastFragmentAdapter adapter;
-    private ArrayList<FeedModel> arr;
+    private ArrayList<FeedModel> arr, temp_arr;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     private TextView profile_name, profile_address, profile_description;
     private ImageView profile_image;
 
+    private String address1;
+    private String profileImage1;
+    private String nickname;
+    private String description1;
+
     private static int LIMIT = 5;
     private static int OFFSET = 1;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        arr = new ArrayList<FeedModel>();
+        arr.add(null);
+        temp_arr = new ArrayList<FeedModel>();
+
+        nickname = "フン";
+        address1 = "Oversea, 27";
+        description1 = "はじめまして、ベトナムです。";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Bitmap icon = BitmapFactory.decodeResource(this.getResources(),
+                R.drawable.avatar);
+        icon.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+
+        byte[] b = baos.toByteArray();
+        profileImage1 = Base64.encodeToString(b, Base64.DEFAULT);
+
+        methodThatSynProfileInfor();
+        methodThatStartsTheAsyncTask();
+//        new GetData((AsynData) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
 
     @Nullable
     @Override
@@ -84,11 +118,18 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         profile_description = (TextView) getActivity().findViewById(R.id.profile_description);
         profile_image = (ImageView) getActivity().findViewById(R.id.profile_icon);
 
+        profile_name.setText(nickname);
+        profile_description.setText(description1);
+        profile_address.setText(address1);
+
+        byte[] decodedString = Base64.decode(profileImage1, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        profile_image.setImageBitmap(decodedByte);
+
         recyclerView = (RecyclerView) getActivity().findViewById(R.id.recyclerView);
-        arr = new ArrayList<FeedModel>();
-//        initData();
+
         adapter = new LastFragmentAdapter(getActivity(), arr, recyclerView);
-        arr.add(null);
         adapter.notifyItemInserted(arr.size() - 1);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
@@ -101,9 +142,9 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
             public void onLoadMore() {
                 arr.add(null);
                 adapter.notifyItemInserted(arr.size() - 1);
-
+                Log.d(Const.LOG_TAG, "vao day ha");
                 LIMIT += 5;
-                new GetData().execute(Const.PROFILE_TIMELINE_URL + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" +  Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+                methodThatStartsTheAsyncTask();
             }
         });
 
@@ -117,18 +158,126 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                 getActivity().startActivity(intent);
             }
         });
-        new GetProfileData().execute(Const.USER_PROFILE_URL + PersonalInfoActivity.getDefaults("id", getActivity()));
-        new GetData().execute(Const.PROFILE_TIMELINE_URL + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" +  Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
+
+    private void methodThatSynProfileInfor() {
+        GetProfileData getProfileData = new GetProfileData(new AsyncRespond() {
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+                nickname = name;
+                address1 = address;
+                description1 = description;
+                profileImage1 = profileImage;
+
+                profile_name.setText(nickname);
+                profile_description.setText(description1);
+                profile_address.setText(address1);
+
+                byte[] decodedString = Base64.decode(profileImage1, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+                profile_image.setImageBitmap(decodedByte);
+
+                Log.d(Const.LOG_TAG, address + " - " + description + " - " + nickname);
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+            }
+        });
+        getProfileData.execute(Const.USER_PROFILE_URL + PersonalInfoActivity.getDefaults("id", getActivity()));
+    }
+
+    private void methodThatStartsTheAsyncTask() {
+
+        GetData testAsyncTask = new GetData(new AsyncRespond() {
+
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+                methodThatDoesSomethingWhenTaskIsDone(arr);
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+            }
+        });
+
+        testAsyncTask.execute(Const.PROFILE_TIMELINE_URL + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" +  Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
+
+    private void methodThatDoesSomethingWhenTaskIsDone(ArrayList<FeedModel> temp_arr) {
+        /* Magic! */
+        arr.clear();
+        arr.addAll(temp_arr);
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            adapter.setLoaded();
+            Log.d(Const.LOG_TAG, "refresh");
+        }
     }
 
     @Override
     public void onRefresh() {
-        new GetProfileData().execute(Const.USER_PROFILE_URL + PersonalInfoActivity.getDefaults("id", getActivity()));
-        new GetData().execute(Const.PROFILE_TIMELINE_URL + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" +  Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+        methodThatSynProfileInfor();
+        methodThatStartsTheAsyncTask();
         LIMIT = 5;
     }
 
     private class GetData extends AsyncTask<String, Void, String> {
+
+        private AsyncRespond listener;
+
+        public GetData(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -172,8 +321,6 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
         @Override
         protected void onPostExecute(String doubles) {
 
-//            Log.d(Const.LOG_TAG, encodedImage);
-
             try{
 
                 JSONObject jsonObject = new JSONObject(doubles);
@@ -195,12 +342,10 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
 
                         arrayList.add(model);
                     }
-                    arr.clear();
-                    arr.addAll(arrayList);
-                    adapter.notifyDataSetChanged();
-//                    progressDialog.dismiss();
-                    swipeRefreshLayout.setRefreshing(false);
-                    adapter.setLoaded();
+                    temp_arr.clear();
+                    temp_arr.addAll(arrayList);
+
+                    listener.processLastFinish(temp_arr);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -209,6 +354,12 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
     }
 
     private class GetProfileData extends AsyncTask<String, Void, String> {
+
+        private AsyncRespond listener;
+
+        public GetProfileData(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -263,17 +414,7 @@ public class LastFragment extends Fragment implements SwipeRefreshLayout.OnRefre
                     String nickname = data.getString(Const.NICK_NAME);
                     String description = data.getString(Const.DESCRIPTION);
 
-                    profile_name.setText(nickname);
-                    profile_description.setText(description);
-                    profile_address.setText(address);
-
-                    byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
-                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
-                    profile_image.setImageBitmap(decodedByte);
-
-                    Log.d(Const.LOG_TAG, address + " - " + description + " - " + nickname);
-                    swipeRefreshLayout.setRefreshing(false);
+                    listener.processProfileFinish(nickname, address, description, profileImage);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

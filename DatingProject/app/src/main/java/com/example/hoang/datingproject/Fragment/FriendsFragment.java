@@ -26,8 +26,11 @@ import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
 import com.example.hoang.datingproject.Adapter.DatingAdapter;
 import com.example.hoang.datingproject.Adapter.FriendsAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.FootPrintModel;
+import com.example.hoang.datingproject.Model.MessageModel;
 import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
+import com.example.hoang.datingproject.Utilities.AsyncRespond;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
@@ -53,8 +56,18 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     private RecyclerView recyclerView;
     private FriendsAdapter adapter;
-    private ArrayList<PersonModel> arr;
+    private ArrayList<PersonModel> arr, temp_arr;
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        arr = new ArrayList<PersonModel>();
+        arr.add(null);
+        temp_arr = new ArrayList<PersonModel>();
+        methodThatStartsTheAsyncTask();
+//        new GetData((AsynData) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
 
     @Nullable
     @Override
@@ -69,11 +82,10 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
         swipeRefreshLayout.setOnRefreshListener(this);
         recyclerView = (RecyclerView) getActivity().findViewById(R.id.recyclerView);
-        arr = new ArrayList<PersonModel>();
 
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),3);
         recyclerView.setLayoutManager(gridLayoutManager);
-        arr.add(null);
+
         adapter = new FriendsAdapter(getActivity(), arr, recyclerView);
         adapter.notifyItemInserted(arr.size() - 1);
         recyclerView.setAdapter(adapter);
@@ -91,20 +103,14 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
                     public void run() {
 
                         //Remove loading item
-                        arr.remove(arr.size() - 1);
-                        adapter.notifyItemRemoved(arr.size());
+                        arr.add(null);
+                        adapter.notifyItemInserted(arr.size() - 1);
 
-                        //Load data
-                        int index = arr.size();
-//                        initData();
-                        adapter.notifyDataSetChanged();
-                        adapter.setLoaded();
+                        methodThatStartsTheAsyncTask();
                     }
                 }, 5000);
             }
         });
-
-        new GetData().execute(Const.USER_LIST_URL);
 
         Typeface font = FontManager.getTypeface(getActivity(), FontManager.FONTAWESOME);
         TextView plus = (TextView) getActivity().findViewById(R.id.plus_icon);
@@ -117,9 +123,60 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
         });
     }
 
+    private void methodThatStartsTheAsyncTask() {
+        GetData testAsyncTask = new GetData(new AsyncRespond() {
+
+
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+                methodThatDoesSomethingWhenTaskIsDone(arr);
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+            }
+        });
+
+        testAsyncTask.execute(Const.USER_LIST_URL);
+    }
+
+    private void methodThatDoesSomethingWhenTaskIsDone(ArrayList<PersonModel> temp_arr) {
+        /* Magic! */
+        arr.clear();
+        arr.addAll(temp_arr);
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            adapter.setLoaded();
+            Log.d(Const.LOG_TAG, "refresh1");
+        }
+    }
+
     @Override
     public void onRefresh() {
-        new GetData().execute(Const.USER_LIST_URL);
+        methodThatStartsTheAsyncTask();
     }
 
     public void showDialog(){
@@ -129,6 +186,12 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     private class GetData extends AsyncTask<String, Void, String> {
+
+        private AsyncRespond listener;
+
+        public GetData(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -196,11 +259,10 @@ public class FriendsFragment extends Fragment implements SwipeRefreshLayout.OnRe
 
                         arrayList.add(model);
                     }
-                    arr.clear();
-                    arr.addAll(arrayList);
-                    adapter.notifyDataSetChanged();
-//                    progressDialog.dismiss();
-                    swipeRefreshLayout.setRefreshing(false);
+                    temp_arr.clear();
+                    temp_arr.addAll(arrayList);
+
+                    listener.processFriendFinish(temp_arr);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

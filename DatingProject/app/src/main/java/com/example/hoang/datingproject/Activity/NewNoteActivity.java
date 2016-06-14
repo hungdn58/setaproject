@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -39,7 +40,7 @@ import java.util.HashMap;
 public class NewNoteActivity extends AppCompatActivity {
 
     private TextView plus_icon, new_note_camera, new_note_tag, new_note_location, new_note_emotion, friend_icon, right_icon;
-    private ImageView new_note_image;
+    private ImageView new_note_image, new_note_profile;
     private Bitmap img = null;
     private EditText description;
     private String image_des = null;
@@ -72,6 +73,16 @@ public class NewNoteActivity extends AppCompatActivity {
         right_icon.setTypeface(font);
 
         new_note_image = (ImageView) findViewById(R.id.new_note_image);
+
+        new_note_profile = (ImageView) findViewById(R.id.new_post_profile);
+
+        String profileImage = PersonalInfoActivity.getDefaults("profileImage", NewNoteActivity.this);
+
+        byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
+
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+        new_note_profile.setImageBitmap(decodedByte);
 
         plus_icon.setOnClickListener(new View.OnClickListener() {
             @Override

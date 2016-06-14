@@ -1,6 +1,8 @@
 package com.example.hoang.datingproject.Adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -148,6 +150,28 @@ public class MessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         }
     }
 
+    private void createDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("Update Account");
+        builder.setMessage("You need to update your personal account to perform this action?");
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(mContext, PersonalInfoActivity.class);
+                mContext.startActivity(intent);
+            }
+        });
+
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.show();
+    }
+
     public class MessageHolder extends RecyclerView.ViewHolder{
 
         private ImageView messageIcon;
@@ -169,11 +193,15 @@ public class MessagesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             message_container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mContext, MessagesActivity.class);
-                    intent.putExtra("from", Const.FROM_MESSAGE_ADAPTER);
-                    intent.putExtra("model", arr.get(getAdapterPosition()));
-                    mContext.startActivity(intent);
+                    if (PersonalInfoActivity.getDefaults("id", mContext).equalsIgnoreCase("123")){
+                        createDialog();
+                    } else {
+                        Toast.makeText(mContext, "is clicked", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(mContext, MessagesActivity.class);
+                        intent.putExtra("from", Const.FROM_MESSAGE_ADAPTER);
+                        intent.putExtra("model", arr.get(getAdapterPosition()));
+                        mContext.startActivity(intent);
+                    }
                 }
             });
         }

@@ -29,7 +29,11 @@ import com.example.hoang.datingproject.Activity.WrittingNoteActivity;
 import com.example.hoang.datingproject.Adapter.DatingAdapter;
 import com.example.hoang.datingproject.Adapter.FeedsAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.FootPrintModel;
+import com.example.hoang.datingproject.Model.MessageModel;
+import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
+import com.example.hoang.datingproject.Utilities.AsyncRespond;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.FontManager;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
@@ -57,22 +61,34 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     private RecyclerView recyclerView;
     private FeedsAdapter adapter;
-    private ArrayList<FeedModel> arr;
+    private ArrayList<FeedModel> arr, temp_arr;
     private TextView new_note;
     private SwipeRefreshLayout swipeRefreshLayout;
     private int LIMIT = 5;
     private int OFFSET = 1;
+    private View rootView = null;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        arr = new ArrayList<FeedModel>();
+        arr.add(null);
+        temp_arr = new ArrayList<FeedModel>();
+
+        methodThatStartsTheAsyncTask();
+//        new GetData((AsynData) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.feed_fragment, container, false);
+        rootView = inflater.inflate(R.layout.feed_fragment, container, false);
+        return rootView;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         getControls();
     }
 
@@ -82,12 +98,11 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
         swipeRefreshLayout.setOnRefreshListener(this);
         new_note = (TextView) getActivity().findViewById(R.id.edit_icon);
         recyclerView = (RecyclerView) getActivity().findViewById(R.id.recyclerView);
-        arr = new ArrayList<FeedModel>();
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
         recyclerView.setLayoutManager(linearLayoutManager);
-        arr.add(null);
+
         adapter = new FeedsAdapter(getActivity(), arr, recyclerView);
         adapter.notifyItemInserted(arr.size() - 1);
         recyclerView.setAdapter(adapter);
@@ -99,7 +114,8 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                 arr.add(null);
                 adapter.notifyItemInserted(arr.size() - 1);
                 LIMIT += 5;
-                new GetData().execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+                methodThatStartsTheAsyncTask();
+//                new GetData((AsyncRespond) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
 //                new AddData().execute(Const.LIST_TIMELINE_URL);
 //                adapter.setLoaded();
             }
@@ -116,21 +132,64 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 //                showDialog();
             }
         });
+    }
 
-        new GetData().execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
-        Bitmap icon = BitmapFactory.decodeResource(getActivity().getResources(),
-                R.drawable.avatar);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        icon.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
-        byte[] b = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-//        getTimeline("4", encodedImage);
+    private void methodThatStartsTheAsyncTask() {
+        GetData testAsyncTask = new GetData(new AsyncRespond() {
+
+
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+                methodThatDoesSomethingWhenTaskIsDone(arr);
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+            }
+        });
+
+        testAsyncTask.execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
+
+
+    private void methodThatDoesSomethingWhenTaskIsDone(ArrayList<FeedModel> temp_arr) {
+        /* Magic! */
+        arr.clear();
+        arr.addAll(temp_arr);
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            adapter.setLoaded();
+            Log.d(Const.LOG_TAG, "refresh");
+        }
     }
 
     @Override
     public void onRefresh() {
-        new GetData().execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
         LIMIT = 5;
+        methodThatStartsTheAsyncTask();
     }
 
     public void showDialog(){
@@ -146,6 +205,12 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     }
 
     public class GetData extends AsyncTask<String, Void, String> {
+
+        private AsyncRespond listener;
+
+        public GetData(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -207,6 +272,7 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
                         String nickname = item.getString(Const.NICK_NAME);
                         String itemID = item.getString(Const.ITEMID);
                         String image = item.getString(Const.IMAGE);
+                        String birthday = item.getString(Const.BIRTHDAY);
 
                         JSONObject replyTo = item.getJSONObject(Const.REPLY_TO);
 
@@ -214,16 +280,15 @@ public class FeedsFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
                         Log.d(Const.LOG_TAG, content + " - " + profileImage + " - " + nickname);
 
-                        FeedModel model = new FeedModel(profileImage, nickname, content, convertStringtoBitmap(image),itemID, userID);
+                        FeedModel model = new FeedModel(profileImage, nickname, content, convertStringtoBitmap(image),itemID, userID, birthday);
 
                         arrayList.add(model);
 
                     }
-                    arr.clear();
-                    arr.addAll(arrayList);
-                    adapter.notifyDataSetChanged();
-                    swipeRefreshLayout.setRefreshing(false);
-                    adapter.setLoaded();
+                    temp_arr.clear();
+                    temp_arr.addAll(arrayList);
+
+                    listener.processFinish(temp_arr);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

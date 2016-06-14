@@ -325,7 +325,7 @@ public class PersonalInfoActivity extends AppCompatActivity implements View.OnCl
                 img = getResizedBitmap(img, 200);
 
                 BitmapDrawable ob = new BitmapDrawable(getResources(), img);
-                avatar.setImageDrawable(ob);
+                avatar.setBackground(ob);
             }
         }
     }
@@ -401,7 +401,8 @@ public class PersonalInfoActivity extends AppCompatActivity implements View.OnCl
 
                     byte[] decodedString = Base64.decode(profileImage, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    avatar.setImageBitmap(decodedByte);
+                    BitmapDrawable ob = new BitmapDrawable(getResources(), decodedByte);
+                    avatar.setBackground(ob);
                     nickname.setText(name);
                     old.setText(birthday);
                     editInfo.setText(description);

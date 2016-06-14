@@ -428,7 +428,9 @@ public class MessagesActivity extends AppCompatActivity implements View.OnClickL
                         arr.add(model);
                         adapter.notifyDataSetChanged();
                     }
-                    scrollToTop();
+                    if (arr.size() != 0) {
+                        scrollToTop();
+                    }
                     progressDialog.dismiss();
                 }
             } catch (JSONException e) {

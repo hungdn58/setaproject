@@ -19,9 +19,12 @@ import com.example.hoang.datingproject.Activity.PersonalInfoActivity;
 import com.example.hoang.datingproject.Adapter.FeedsAdapter;
 import com.example.hoang.datingproject.Adapter.MessagesAdapter;
 import com.example.hoang.datingproject.Model.FeedModel;
+import com.example.hoang.datingproject.Model.FootPrintModel;
 import com.example.hoang.datingproject.Model.MessageModel;
 import com.example.hoang.datingproject.Model.NotificationModel;
+import com.example.hoang.datingproject.Model.PersonModel;
 import com.example.hoang.datingproject.R;
+import com.example.hoang.datingproject.Utilities.AsyncRespond;
 import com.example.hoang.datingproject.Utilities.Const;
 import com.example.hoang.datingproject.Utilities.OnLoadMoreListener;
 
@@ -44,12 +47,22 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
 
     private RecyclerView recyclerView;
     private MessagesAdapter adapter;
-    private ArrayList<MessageModel> arr;
+    private ArrayList<MessageModel> arr, temp_arr;
     public static int LIMIT = 10;
     public static int OFFSET = 1;
     public String url;
 
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        arr = new ArrayList<MessageModel>();
+        arr.add(null);
+        temp_arr = new ArrayList<MessageModel>();
+        methodThatStartsTheAsyncTask();
+//        new GetData((AsynData) getActivity()).execute(Const.LIST_TIMELINE_URL + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
 
     @Nullable
     @Override
@@ -66,7 +79,6 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
         swipeRefreshLayout.setOnRefreshListener(this);
 
         recyclerView = (RecyclerView) getActivity().findViewById(R.id.recyclerView);
-        arr = new ArrayList<MessageModel>();
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
 //        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(),4);
@@ -83,21 +95,77 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
                 arr.add(null);
                 adapter.notifyItemInserted(arr.size() - 1);
                 LIMIT += 10;
-                new GetData().execute(Const.CHAT_LIST_URL + Const.ID + "=" + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+                methodThatStartsTheAsyncTask();
             }
         });
 
-        new GetData().execute(Const.CHAT_LIST_URL + Const.ID + "=" + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+        methodThatStartsTheAsyncTask();
 
+    }
+
+    private void methodThatStartsTheAsyncTask() {
+        GetData testAsyncTask = new GetData(new AsyncRespond() {
+
+
+            @Override
+            public void processFinish(ArrayList<FeedModel> arr) {
+            }
+
+            @Override
+            public void processFriendFinish(ArrayList<PersonModel> arr) {
+
+            }
+
+            @Override
+            public void processMessageFinish(ArrayList<MessageModel> arr) {
+                methodThatDoesSomethingWhenTaskIsDone(arr);
+            }
+
+            @Override
+            public void processDatingFinish(ArrayList<FootPrintModel> arr) {
+
+            }
+
+            @Override
+            public void processLastFinish(ArrayList<FeedModel> arr) {
+
+            }
+
+            @Override
+            public void processProfileFinish(String name, String address, String description, String profileImage) {
+
+            }
+        });
+
+        testAsyncTask.execute(Const.CHAT_LIST_URL + Const.ID + "=" + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+    }
+
+    private void methodThatDoesSomethingWhenTaskIsDone(ArrayList<MessageModel> temp_arr) {
+        /* Magic! */
+        arr.clear();
+        arr.addAll(temp_arr);
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+            swipeRefreshLayout.setRefreshing(false);
+            adapter.setLoaded();
+            Log.d(Const.LOG_TAG, "refresh2");
+        }
     }
 
     @Override
     public void onRefresh() {
-        new GetData().execute(Const.CHAT_LIST_URL + Const.ID + "=" + PersonalInfoActivity.getDefaults("id", getActivity()) + "&" + Const.LIMIT + "=" + LIMIT + "&" + Const.OFFSET + "=" + OFFSET);
+        methodThatStartsTheAsyncTask();
         LIMIT = 10;
     }
 
     public class GetData extends AsyncTask<String, Void, String> {
+
+        private AsyncRespond listener;
+
+        public GetData(AsyncRespond listener){
+            this.listener=listener;
+        }
 
         @Override
         protected void onPreExecute() {
@@ -167,12 +235,10 @@ public class MessagesFragment extends Fragment implements SwipeRefreshLayout.OnR
                         arrayList.add(model);
 
                     }
-                    arr.clear();
-                    arr.addAll(arrayList);
-                    adapter.notifyDataSetChanged();
-//                    progressDialog.dismiss();
-                    swipeRefreshLayout.setRefreshing(false);
-                    adapter.setLoaded();
+                    temp_arr.clear();
+                    temp_arr.addAll(arrayList);
+
+                    listener.processMessageFinish(temp_arr);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

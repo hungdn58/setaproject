@@ -50,7 +50,7 @@ public class LastFragmentAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private OnLoadMoreListener mOnLoadMoreListener;
 
     private boolean isLoading;
-    private int visibleThreshold = 5;
+    private int visibleThreshold = 1;
     private int lastVisibleItem, totalItemCount;
 
 
@@ -71,7 +71,7 @@ public class LastFragmentAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
                 }
 
-                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold) && totalItemCount >=5) {
                     if (mOnLoadMoreListener != null) {
                         mOnLoadMoreListener.onLoadMore();
                     }
