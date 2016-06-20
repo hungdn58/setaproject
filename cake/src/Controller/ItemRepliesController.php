@@ -52,7 +52,7 @@ class ItemRepliesController extends AppController
         $output = [];
         if ($this->request->is('post')) {
             $data = $this->request->data;
-            var_dump($_POST);die();
+            // var_dump($_POST);die();
             $itemReply = $this->ItemReplies->patchEntity($itemReply, $this->request->data);
             if ($this->ItemReplies->save($itemReply)) {
                 $this->Flash->success(__('The item has been saved.'));

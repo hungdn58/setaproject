@@ -27,6 +27,6 @@ class ItemReply extends Entity
      */
     protected $_accessible = [
         '*' => true,
-        'itemID' => false,
+        'itemReplyID' => false,
     ];
 }

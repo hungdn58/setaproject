@@ -11,6 +11,7 @@
         <?php
             echo $this->Form->input('contents');
             echo $this->Form->input('userID');
+            echo $this->Form->input('image');
             echo $this->Form->input('createDate');
             echo $this->Form->input('updateDate', ['empty' => true]);
             echo $this->Form->input('delFlg');

@@ -9,6 +9,7 @@
     <fieldset>
         <legend><?= __('Add Footprint') ?></legend>
         <?php
+            echo $this->Form->input('footprintID');
             echo $this->Form->input('visitor');
             echo $this->Form->input('createDate', ['empty' => true]);
             echo $this->Form->input('delFlg');

@@ -32,7 +32,7 @@
         </tr>
         <tr>
             <th><?= __('From') ?></th>
-            <td><?= $this->Number->format($userChat->from) ?></td>
+            <td><?= $this->Number->format($userChat->fromUser) ?></td>
         </tr>
         <tr>
             <th><?= __('IsBlock') ?></th>

@@ -49,17 +49,29 @@ class UserChatController extends AppController
             $output['opponent'] = '/www/profile.jpg';
             // $output[] = ['opponent' => '/www/profile.jpg'];
             $array = array();
+            $this->loadModel('Users');
             foreach ($data as $chatItem) {
                 $sender = "";
-                if($chatItem->userID1 == $chatItem->from){
+                if($chatItem->userID1 == $chatItem->fromUser){
                     $sender = 'owner';
                 }else{
                     $sender = 'other';
                 }
+
+                $user = $this->Users->find()->where(['userId' => $chatItem->fromUser])->first();
+
+                $time = $chatItem->createDate;
+                $time = strtotime($time);
+                $hour = date('H', $time);
+                $minute = date('i', $time);
+                $posttime = $hour.":".$minute;
+
                 $array[] = [
                     'from' => $sender,
                     'content'  =>  $chatItem->message,
-                    'posttime'   =>  $chatItem->createDate
+                    'posttime'   =>  $posttime,
+                    'fromID' => $chatItem->fromUser,
+                    'profileImage' => $user->profileImage
                 ];
             }
             $output['data'] = $array;
@@ -84,8 +96,8 @@ class UserChatController extends AppController
         $output = [];
 
         if ($this->request->is('post')) {
-            // $data = $this->request->data;
-            // var_dump($_POST);die();
+             // $data = $this->request->data;
+             // var_dump($data);die();
             $userChat = $this->UserChat->patchEntity($userChat, $this->request->data);
             if ($this->UserChat->save($userChat)) {
                 $this->Flash->success(__('The user chat has been saved.'));
@@ -156,7 +168,7 @@ class UserChatController extends AppController
         $offset = $this->request->query['offset'];
         $limit = $this->request->query['limit'];
 
-        $data = $this->UserChat->find()->where(['userID1' => $userId]);
+        $data = $this->UserChat->find()->where(['userID1' => $userId])->limit($limit);
         
         $output = [];
 
@@ -165,14 +177,17 @@ class UserChatController extends AppController
             $array = array();
             foreach ($data as $chatItem) {
                 $user = $this->Users->find()->where(['userId' => $chatItem->userID2])->first();
-                $array[] = [
-                    'user' => [
-                        'profileImage'  =>  $user->profileImage,
-                        'nickname'  =>  $user->nickname,
-                    ],
-                    'content'  =>  $chatItem->message,
-                    'posttime'   =>  $chatItem->createDate
 
+                $time = $chatItem->createDate;
+                $time = strtotime($time);
+                $posttime = date('Y-m-d' , $time);
+
+                $array[] = [
+                    'content'  =>  $chatItem->message,
+                    'posttime'   =>  $posttime,
+                    'profileImage'  =>  $user->profileImage,
+                    'nickname'  =>  $user->nickname,   
+                    'friend_id' => $user->userId     
                 ];
             }
             $output['data'] = $array;

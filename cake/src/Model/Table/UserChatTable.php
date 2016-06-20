@@ -62,13 +62,11 @@ class UserChatTable extends Table
 
         $validator
             ->dateTime('createDate')
-            ->requirePresence('createDate', 'create')
-            ->notEmpty('createDate');
+            ->allowEmpty('createDate');
 
         $validator
             ->dateTime('updateDate')
-            ->requirePresence('updateDate', 'create')
-            ->notEmpty('updateDate');
+            ->allowEmpty('updateDate');
 
         $validator
             ->allowEmpty('delFlg');

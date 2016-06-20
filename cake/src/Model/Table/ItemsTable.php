@@ -49,6 +49,10 @@ class ItemsTable extends Table
             ->requirePresence('contents', 'create')
             ->notEmpty('contents');
 
+        $validator
+            ->requirePresence('image', 'create')
+            ->allowEmpty('image');
+
         return $validator;
     }
 }

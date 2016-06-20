@@ -16,7 +16,6 @@
         <legend><?= __('Edit Item') ?></legend>
         <?php
             echo $this->Form->input('reportBy');
-            echo $this->Form->input('createDate');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

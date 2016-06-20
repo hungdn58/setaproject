@@ -27,11 +27,17 @@ class NotificationsController extends AppController
         if ($data) {
             $output['result'] = 1;
             $array = array();
+
             foreach ($data as $notification) {
+
+                $time = $notification->createDate;
+                $time = strtotime($time);
+                $posttime = date('Y-m-d' , $time);
+
                 $array[] = [
                     'title'  =>  $notification->title,
                     'content'  =>  $notification->content,
-                    'posttime'   =>  $notification->createDate
+                    'posttime'   =>  $posttime
                 ];
             }
             $output['data'] = $array;
@@ -70,15 +76,21 @@ class NotificationsController extends AppController
      */
     public function add()
     {
+        $output = [];
         $notification = $this->Notifications->newEntity();
         if ($this->request->is('post')) {
             $notification = $this->Notifications->patchEntity($notification, $this->request->data);
             if ($this->Notifications->save($notification)) {
                 $this->Flash->success(__('The notification has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                $output['result'] = 1;
             } else {
                 $this->Flash->error(__('The notification could not be saved. Please, try again.'));
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
+            $this->viewBuilder()->layout('json');
+            $this->set('data', json_encode($output));
+            $this->render('/General/SerializeJson/');
         }
         $this->set(compact('notification'));
         $this->set('_serialize', ['notification']);

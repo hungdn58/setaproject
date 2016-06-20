@@ -13,7 +13,7 @@
                 <th><?= $this->Paginator->sort('userID1') ?></th>
                 <th><?= $this->Paginator->sort('userID2') ?></th>
                 <th><?= $this->Paginator->sort('message') ?></th>
-                <th><?= $this->Paginator->sort('from') ?></th>
+                <th><?= $this->Paginator->sort('fromUser') ?></th>
                 <th><?= $this->Paginator->sort('createDate') ?></th>
                 <th><?= $this->Paginator->sort('updateDate') ?></th>
                 <th><?= $this->Paginator->sort('delFlg') ?></th>
@@ -28,7 +28,7 @@
                 <td><?= $this->Number->format($userChat->userID1) ?></td>
                 <td><?= $this->Number->format($userChat->userID2) ?></td>
                 <td><?= h($userChat->message) ?></td>
-                <td><?= $this->Number->format($userChat->from) ?></td>
+                <td><?= $this->Number->format($userChat->fromUser) ?></td>
                 <td><?= h($userChat->createDate) ?></td>
                 <td><?= h($userChat->updateDate) ?></td>
                 <td><?= h($userChat->delFlg) ?></td>

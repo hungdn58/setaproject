@@ -12,7 +12,6 @@
             echo $this->Form->input('comments');
             echo $this->Form->input('writeUserID');
             echo $this->Form->input('itemID');
-            echo $this->Form->input('createDate');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

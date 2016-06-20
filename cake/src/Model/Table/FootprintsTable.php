@@ -47,6 +47,11 @@ class FootprintsTable extends Table
             ->notEmpty('visitor');
 
         $validator
+            ->integer('footprintID')
+            ->requirePresence('footprintID', 'create')
+            ->notEmpty('footprintID');
+
+        $validator
             ->dateTime('createDate')
             ->allowEmpty('createDate');
 

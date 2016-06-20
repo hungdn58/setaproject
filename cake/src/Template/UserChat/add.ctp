@@ -13,10 +13,6 @@
             echo $this->Form->input('userID2');
             echo $this->Form->input('message');
             echo $this->Form->input('fromUser');
-            echo $this->Form->input('createDate');
-            echo $this->Form->input('updateDate');
-            echo $this->Form->input('delFlg');
-            echo $this->Form->input('isBlock');
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

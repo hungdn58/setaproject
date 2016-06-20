@@ -57,11 +57,9 @@ class UsersTable extends Table
             ->allowEmpty('description');
 
         $validator
-            ->integer('gender')
             ->allowEmpty('gender');
 
         $validator
-            ->dateTime('birthday')
             ->allowEmpty('birthday');
 
         $validator

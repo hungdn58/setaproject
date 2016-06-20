@@ -26,28 +26,27 @@ class UsersController extends AppController
 
         //$this->set(compact('users'));
         //$this->set('_serialize', ['users']);
-        $data = Array(
-            "name" => "Saad Imran",
-            "age" => 19
-        );
+        // $data = Array(
+        //     "name" => "Saad Imran",
+        //     "age" => 19
+        // );
         $data = $this->Users->find('all');
         
         $output = [];
         if($data) {
             $output['result'] = 1;
-            foreach ($data as $item) {
-                $output[] = [
-                    'user' => [
-                        'profileImage'  =>  $item->profileImage,
-                        'nickname'  =>  $item->nickname,
-                        'address'   =>  $item->address,
-                        'replyTo'   =>  ['userID' => $item->userId, 'userName' => $item->nickname],
-                        'content'   =>  $item->description
-                    ]
+            $array = array();
+            foreach ($data as $user) {
+                $array[] = [
+                    'profileImage'  =>  $user->profileImage,
+                    'nickname'  =>  $user->nickname,
+                    'uid'   =>  $user->uid,
+                    'userId' => $user->userId
                 ];
                 
             }
-            $output[] = ['totalCount' => $data->count()];
+            $output['data'] = $array;
+            $output['totalCount'] = $data->count();
         } else {
             $output['result'] = 0;
             $output['reason'] = 'không lấy được dữ liệu';
@@ -66,7 +65,7 @@ class UsersController extends AppController
 
         // $data = $this->Users->find()->where(['dateDiff(NOW(),Users.birthday) >' => $year_from])
         //                             ->andWhere(['dateDiff(NOW(),Users.birthday) <' => $year_to])
-        $data = $this->Users->find()->andWhere(['Users.gender' => $gender]);
+        $data = $this->Users->find()->andWhere(['Users.gender' => $gender])->andWhere(['Users.birthday <' => $year_to])->andWhere(['Users.birthday >' => $year_from]);
 
         $output = [];
         if($data) {
@@ -77,7 +76,8 @@ class UsersController extends AppController
 
                 $array[] = [
                     'profileImage'  =>  $user->profileImage,
-                    'userID'  =>  $user->userId,
+                    'userId'  =>  $user->userId,
+                    'nickname' => $user->nickname,
                 ];
             }
             $output['data'] = $array;
@@ -114,15 +114,23 @@ class UsersController extends AppController
     public function add()
     {
         $user = $this->Users->newEntity();
+        $output = [];
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('The user has been saved.'));
-                return $this->redirect(['action' => 'index']);
+                $output['result'] = 1;
+                $output['userId'] = $user->userId;
+                $output['profileImage'] = $user->profileImage;
             } else {
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
             }
-        }
+            $this->viewBuilder()->layout('json');
+            $this->set('data', json_encode($output));
+            $this->render('/General/SerializeJson/');
+        } 
         $this->set(compact('user'));
         $this->set('_serialize', ['user']);
     }
@@ -136,6 +144,7 @@ class UsersController extends AppController
      */
     public function edit($userId = null)
     {
+
         $user = $this->Users->get($userId);
        
         $output = [];
@@ -154,7 +163,7 @@ class UsersController extends AppController
                 $output['result'] = 0;
                 $output['reason'] = 'không lấy được dữ liệu';
             }
-             $this->viewBuilder()->layout('json');
+            $this->viewBuilder()->layout('json');
             $this->set('data', json_encode($output));
             $this->render('/General/SerializeJson/');
         }
@@ -172,7 +181,7 @@ class UsersController extends AppController
     public function delete($id = null)
     {
         $this->viewBuilder()->layout('json');
-        $this->request->allowMethod(['post', 'delete']);
+        // $this->request->allowMethod(['post', 'delete']);
         $user = $this->Users->get($id);
         $output = [];
         // var_dump($_POST);die();
@@ -206,6 +215,7 @@ class UsersController extends AppController
                 'birthday' => $user->birthday,
                 'address' => $user->address,
                 'description' => $user->description,
+                'userId' =>$user->userId
             ];
         }else{
             $output['result'] = 0;
@@ -214,6 +224,36 @@ class UsersController extends AppController
 
         $this->set('data', json_encode($output));
         $this->render('/General/SerializeJson/');
+    }
+
+    public function updateID($nickname = null) {
+
+        $output = [];
+        $user = $this->Users->find()->where(['nickname' => $nickname])->first();
+
+        if ($this->request->is(['patch', 'post', 'put'])) {
+            
+            $data = $this->request->data;
+            $email = $data['nickname'];
+            $uid = $data['uid'];
+            // var_dump($_POST);die();
+            
+            $user = $this->Users->patchEntity($user, $this->request->data);
+
+            if ($this->Users->save($user)) {
+                $output['result'] = 1;
+                $output['userId'] = $user->userId;
+                // return $this->redirect(['action' => 'index']);
+            } else {
+                $output['result'] = 0;
+                $output['reason'] = 'không lấy được dữ liệu';
+            }
+            $this->viewBuilder()->layout('json');
+            $this->set('data', json_encode($output));
+            $this->render('/General/SerializeJson/');
+        }
+        $this->set(compact('user'));
+        $this->set('_serialize', ['user']);
     }
 
 }

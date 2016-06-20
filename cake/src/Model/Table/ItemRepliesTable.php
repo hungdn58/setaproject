@@ -25,8 +25,8 @@ class ItemRepliesTable extends Table
         parent::initialize($config);
 
         $this->table('item_replies');
-        $this->displayField('itemID');
-        $this->primaryKey('itemID');
+        $this->displayField('itemReplyID');
+        $this->primaryKey('itemReplyID');
     }
 
     /**
@@ -38,8 +38,12 @@ class ItemRepliesTable extends Table
     public function validationDefault(Validator $validator)
     {
         $validator
+            ->integer('itemReplyID')
+            ->allowEmpty('itemReplyID', 'create');
+
+        $validator
             ->integer('itemID')
-            ->allowEmpty('itemID', 'create');
+            ->notEmpty('itemID', 'create');
 
         $validator
             ->requirePresence('comments', 'create')
@@ -51,15 +55,11 @@ class ItemRepliesTable extends Table
             ->notEmpty('writeUserID');
 
         $validator
-            ->requirePresence('createDate', 'create')
-            ->notEmpty('createDate');
-
+            ->allowEmpty('createDate');
         $validator
             ->allowEmpty('updateDate');
-
         $validator
-            ->requirePresence('delFlg', 'create')
-            ->notEmpty('delFlg');
+            ->allowEmpty('delFlg');
 
         return $validator;
     }
